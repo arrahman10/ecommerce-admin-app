@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:go_router/go_router.dart';
 
 import 'firebase_options.dart';
+import 'pages/dashboard_page.dart';
+import 'pages/login_page.dart';
 
 Future<void> main() async {
-  // Ensure Flutter bindings are initialized before using Firebase.
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -17,31 +19,31 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Ecommerce Admin App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      routerConfig: _router,
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ecommerce Admin App')),
-      body: const Center(
-        child: Text(
-          'Firebase initialized.\nEcommerce Admin App starter screen.',
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
+final GoRouter _router = GoRouter(
+  initialLocation: LoginPage.routeName,
+  routes: <RouteBase>[
+    GoRoute(
+      name: DashboardPage.routeName,
+      path: DashboardPage.routeName,
+      builder: (BuildContext context, GoRouterState state) =>
+          const DashboardPage(),
+    ),
+    GoRoute(
+      name: LoginPage.routeName,
+      path: LoginPage.routeName,
+      builder: (BuildContext context, GoRouterState state) => const LoginPage(),
+    ),
+  ],
+);

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
-import 'firebase_options.dart';
-import 'pages/dashboard_page.dart';
-import 'pages/login_page.dart';
+import 'package:ecommerce_admin_app/firebase_options.dart';
+import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
+import 'package:ecommerce_admin_app/pages/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Ecommerce Admin App',
       debugShowCheckedModeBanner: false,
+      builder: EasyLoading.init(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

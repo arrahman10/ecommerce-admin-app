@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:ecommerce_admin_app/auth/auth_service.dart';
+import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   static const String routeName = '/login';
@@ -15,6 +21,14 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   String _errMsg = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Demo convenience: pre-fill admin credentials used in Firebase Auth.
+    _emailController.text = 'admin@gmail.com';
+    _passwordController.text = '123456@Ar';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,10 +105,37 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _authenticate() {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _authenticate() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    EasyLoading.show(status: 'Please wait');
+
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text;
+
+    try {
+      final bool status = await AuthService.loginAdmin(email, password);
+      EasyLoading.dismiss();
+
+      if (status) {
+        if (!mounted) return;
+        context.goNamed(DashboardPage.routeName);
+      } else {
+        setState(() {
+          _errMsg = 'Login failed. Please try again.';
+        });
+      }
+    } on FirebaseAuthException catch (error) {
+      EasyLoading.dismiss();
       setState(() {
-        _errMsg = 'Authentication will be implemented in the next step.';
+        _errMsg = error.message ?? 'Authentication failed';
+      });
+    } catch (_) {
+      EasyLoading.dismiss();
+      setState(() {
+        _errMsg = 'An unexpected error occurred. Please try again.';
       });
     }
   }

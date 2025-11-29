@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ecommerce_admin_app/db/db_helper.dart';
 
 class AuthService {
   AuthService._();
@@ -12,7 +13,13 @@ class AuthService {
       email: email,
       password: password,
     );
-    return credential.user != null;
+
+    final User? user = credential.user;
+    if (user == null) {
+      return false;
+    }
+
+    return DbHelper.isAdmin(user.uid);
   }
 
   static Future<void> logout() {

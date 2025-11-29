@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/firebase_options.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
@@ -34,7 +35,21 @@ class MyApp extends StatelessWidget {
 }
 
 final GoRouter _router = GoRouter(
-  initialLocation: LoginPage.routeName,
+  initialLocation: DashboardPage.routeName,
+  redirect: (BuildContext context, GoRouterState state) {
+    final bool isLoggedIn = AuthService.currentUser != null;
+    final bool isLoggingIn = state.matchedLocation == LoginPage.routeName;
+
+    if (!isLoggedIn && !isLoggingIn) {
+      return LoginPage.routeName;
+    }
+
+    if (isLoggedIn && isLoggingIn) {
+      return DashboardPage.routeName;
+    }
+
+    return null;
+  },
   routes: <RouteBase>[
     GoRoute(
       name: DashboardPage.routeName,

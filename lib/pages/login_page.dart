@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 
@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
             shrinkWrap: true,
             children: <Widget>[
               Text(
-                'Ecommerce Admin Login',
+                'Admin Login',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
@@ -116,15 +116,17 @@ class _LoginPageState extends State<LoginPage> {
     final String password = _passwordController.text;
 
     try {
-      final bool status = await AuthService.loginAdmin(email, password);
+      final bool isAdmin = await AuthService.loginAdmin(email, password);
       EasyLoading.dismiss();
 
-      if (status) {
+      if (isAdmin) {
         if (!mounted) return;
         context.goNamed(DashboardPage.routeName);
       } else {
+        await AuthService.logout();
+        if (!mounted) return;
         setState(() {
-          _errMsg = 'Login failed. Please try again.';
+          _errMsg = 'This is not an Admin account';
         });
       }
     } on FirebaseAuthException catch (error) {

@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/firebase_options.dart';
+import 'package:ecommerce_admin_app/pages/add_product_page.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
+import 'package:ecommerce_admin_app/pages/view_product_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +58,20 @@ final GoRouter _router = GoRouter(
       path: DashboardPage.routeName,
       builder: (BuildContext context, GoRouterState state) =>
           const DashboardPage(),
+      routes: <RouteBase>[
+        GoRoute(
+          name: AddProductPage.routeName,
+          path: AddProductPage.routeName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const AddProductPage(),
+        ),
+        GoRoute(
+          name: ViewProductPage.routeName,
+          path: ViewProductPage.routeName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const ViewProductPage(),
+        ),
+      ],
     ),
     GoRoute(
       name: LoginPage.routeName,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
+import 'package:ecommerce_admin_app/customwidgets/dashboard_item_view.dart';
+import 'package:ecommerce_admin_app/models/dashboard_model.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -31,11 +33,23 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: const Center(
-        child: Text(
-          'Dashboard Page\n(Ecommerce Admin)',
-          textAlign: TextAlign.center,
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
         ),
+        itemCount: dashboardModelList.length,
+        itemBuilder: (BuildContext context, int index) {
+          final DashboardModel model = dashboardModelList[index];
+          return DashboardItemView(
+            model: model,
+            onTap: (String routeName) {
+              context.goNamed(routeName);
+            },
+          );
+        },
       ),
     );
   }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/customwidgets/dashboard_item_view.dart';
 import 'package:ecommerce_admin_app/models/dashboard_model.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
+import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 
 class DashboardPage extends StatefulWidget {
   static const String routeName = '/';
@@ -16,6 +18,12 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    Provider.of<BrandProvider>(context, listen: false).getAllBrands();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:ecommerce_admin_app/pages/add_product_page.dart';
 import 'package:ecommerce_admin_app/pages/view_product_page.dart';
+import 'package:ecommerce_admin_app/pages/brands/brand_page.dart';
 
 class DashboardModel {
   final String title;
@@ -25,5 +26,10 @@ const List<DashboardModel> dashboardModelList = <DashboardModel>[
     title: 'View Products',
     iconData: Icons.inventory_2_outlined,
     routeName: ViewProductPage.routeName,
+  ),
+  DashboardModel(
+    title: 'Brands',
+    iconData: Icons.category_outlined,
+    routeName: BrandPage.routeName,
   ),
 ];

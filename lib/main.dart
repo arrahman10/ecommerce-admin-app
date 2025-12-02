@@ -3,16 +3,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/single_child_widget.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/firebase_options.dart';
 import 'package:ecommerce_admin_app/pages/add_product_page.dart';
 import 'package:ecommerce_admin_app/pages/brands/brand_page.dart';
+import 'package:ecommerce_admin_app/pages/categories/category_page.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
 import 'package:ecommerce_admin_app/pages/view_product_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
+import 'package:ecommerce_admin_app/providers/category_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +22,13 @@ Future<void> main() async {
 
   runApp(
     MultiProvider(
-      providers: <SingleChildWidget>[
-        ChangeNotifierProvider<BrandProvider>(create: (_) => BrandProvider()),
+      providers: [
+        ChangeNotifierProvider<BrandProvider>(
+          create: (BuildContext context) => BrandProvider(),
+        ),
+        ChangeNotifierProvider<CategoryProvider>(
+          create: (BuildContext context) => CategoryProvider(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -87,6 +93,12 @@ final GoRouter _router = GoRouter(
           path: BrandPage.routeName,
           builder: (BuildContext context, GoRouterState state) =>
               const BrandPage(),
+        ),
+        GoRoute(
+          name: CategoryPage.routeName,
+          path: CategoryPage.routeName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const CategoryPage(),
         ),
       ],
     ),

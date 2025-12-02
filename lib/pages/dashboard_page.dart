@@ -7,6 +7,7 @@ import 'package:ecommerce_admin_app/customwidgets/dashboard_item_view.dart';
 import 'package:ecommerce_admin_app/models/dashboard_model.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
+import 'package:ecommerce_admin_app/providers/category_provider.dart';
 
 class DashboardPage extends StatefulWidget {
   static const String routeName = '/';
@@ -22,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     Provider.of<BrandProvider>(context, listen: false).getAllBrands();
+    Provider.of<CategoryProvider>(context, listen: false).getAllCategories();
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ecommerce_admin_app/models/brand.dart';
+import 'package:ecommerce_admin_app/models/category.dart';
 
 class DbHelper {
   DbHelper._();
@@ -30,5 +31,19 @@ class DbHelper {
   /// Listen to all brands as a realtime stream.
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllBrands() {
     return _db.collection(collectionBrand).snapshots();
+  }
+
+  /// Add a new category document to the Categories collection.
+  static Future<void> addCategory(Category category) async {
+    final DocumentReference<Map<String, dynamic>> doc = _db
+        .collection(collectionCategory)
+        .doc();
+    final Category updatedCategory = category.copyWith(id: doc.id);
+    await doc.set(updatedCategory.toMap());
+  }
+
+  /// Listen to all categories as a realtime stream.
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllCategories() {
+    return _db.collection(collectionCategory).snapshots();
   }
 }

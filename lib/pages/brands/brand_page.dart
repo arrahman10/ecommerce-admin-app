@@ -48,7 +48,13 @@ class BrandPage extends StatelessWidget {
             itemCount: provider.brandList.length,
             itemBuilder: (BuildContext context, int index) {
               final brand = provider.brandList[index];
-              return ListTile(title: Text(brand.name));
+              return ListTile(
+                title: Text(brand.name),
+                trailing: Text(
+                  '${brand.productCount}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              );
             },
           );
         },

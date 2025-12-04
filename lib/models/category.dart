@@ -1,36 +1,17 @@
-const String collectionCategory = 'Categories';
-const String categoryFieldId = 'id';
-const String categoryFieldName = 'name';
-const String categoryFieldProductCount = 'productCount';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class Category {
-  final String? id;
-  final String name;
-  final int productCount;
+part 'category.freezed.dart';
 
-  const Category({this.id, required this.name, this.productCount = 0});
+part 'category.g.dart';
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      categoryFieldId: id,
-      categoryFieldName: name,
-      categoryFieldProductCount: productCount,
-    };
-  }
+@unfreezed
+class Category with _$Category {
+  factory Category({
+    String? id,
+    required String name,
+    @Default(0) int productCount,
+  }) = _Category;
 
-  factory Category.fromMap(Map<String, dynamic> map) {
-    return Category(
-      id: map[categoryFieldId] as String?,
-      name: (map[categoryFieldName] ?? '') as String,
-      productCount: (map[categoryFieldProductCount] ?? 0) as int,
-    );
-  }
-
-  Category copyWith({String? id, String? name, int? productCount}) {
-    return Category(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      productCount: productCount ?? this.productCount,
-    );
-  }
+  factory Category.fromJson(Map<String, dynamic> json) =>
+      _$CategoryFromJson(json);
 }

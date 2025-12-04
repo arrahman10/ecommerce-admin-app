@@ -1,25 +1,16 @@
-const String collectionBrand = 'Brands';
-const String brandFieldId = 'id';
-const String brandFieldName = 'name';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class Brand {
-  final String? id;
-  final String name;
+part 'brand.freezed.dart';
 
-  const Brand({this.id, required this.name});
+part 'brand.g.dart';
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{brandFieldId: id, brandFieldName: name};
-  }
+@unfreezed
+class Brand with _$Brand {
+  factory Brand({
+    String? id,
+    required String name,
+    @Default(0) int productCount,
+  }) = _Brand;
 
-  factory Brand.fromMap(Map<String, dynamic> map) {
-    return Brand(
-      id: map[brandFieldId] as String?,
-      name: (map[brandFieldName] ?? '') as String,
-    );
-  }
-
-  Brand copyWith({String? id, String? name}) {
-    return Brand(id: id ?? this.id, name: name ?? this.name);
-  }
+  factory Brand.fromJson(Map<String, dynamic> json) => _$BrandFromJson(json);
 }

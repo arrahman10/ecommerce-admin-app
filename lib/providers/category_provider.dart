@@ -25,7 +25,7 @@ class CategoryProvider with flutter_foundation.ChangeNotifier {
     ) {
       _categoryList = snapshot.docs
           .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-            return Category.fromMap(doc.data());
+            return Category.fromJson(doc.data());
           })
           .toList(growable: false);
 

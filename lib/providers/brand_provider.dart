@@ -25,7 +25,7 @@ class BrandProvider with ChangeNotifier {
     ) {
       _brandList = snapshot.docs
           .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-            return Brand.fromMap(doc.data());
+            return Brand.fromJson(doc.data());
           })
           .toList(growable: false);
 

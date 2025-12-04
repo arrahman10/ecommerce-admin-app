@@ -9,6 +9,8 @@ class DbHelper {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static const String collectionAdmins = 'Admins';
+  static const String collectionBrand = 'Brands';
+  static const String collectionCategory = 'Categories';
 
   /// Check if the given user id exists in the Admins collection.
   static Future<bool> isAdmin(String uid) async {
@@ -24,8 +26,8 @@ class DbHelper {
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionBrand)
         .doc();
-    final Brand updatedBrand = brand.copyWith(id: doc.id);
-    await doc.set(updatedBrand.toMap());
+    final Brand brandWithId = brand.copyWith(id: doc.id);
+    await doc.set(brandWithId.toJson());
   }
 
   /// Listen to all brands as a realtime stream.
@@ -38,8 +40,8 @@ class DbHelper {
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionCategory)
         .doc();
-    final Category updatedCategory = category.copyWith(id: doc.id);
-    await doc.set(updatedCategory.toMap());
+    final Category categoryWithId = category.copyWith(id: doc.id);
+    await doc.set(categoryWithId.toJson());
   }
 
   /// Listen to all categories as a realtime stream.

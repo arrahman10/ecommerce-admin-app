@@ -4,6 +4,11 @@ part 'brand.freezed.dart';
 
 part 'brand.g.dart';
 
+const String collectionBrand = 'Brands';
+const String brandFieldId = 'id';
+const String brandFieldName = 'name';
+const String brandFieldProductCount = 'productCount';
+
 @unfreezed
 class Brand with _$Brand {
   factory Brand({

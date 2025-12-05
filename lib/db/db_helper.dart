@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:ecommerce_admin_app/models/brand.dart';
 import 'package:ecommerce_admin_app/models/category.dart';
+import 'package:ecommerce_admin_app/models/image_model.dart';
 import 'package:ecommerce_admin_app/models/product.dart';
+import 'package:ecommerce_admin_app/utils/constants.dart';
 
 class DbHelper {
   DbHelper._();
@@ -67,5 +72,64 @@ class DbHelper {
   /// Listen to all products as a realtime stream.
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllProducts() {
     return _db.collection(collectionProduct).snapshots();
+  }
+
+  /// Upload a single product image file to Firebase Storage
+  /// and return an ImageModel with download URL + storage path.
+  static Future<ImageModel> uploadProductImage(File file) async {
+    final String originalFileName = file.uri.pathSegments.isNotEmpty
+        ? file.uri.pathSegments.last
+        : 'product_image.jpg';
+
+    final String fileName =
+        '${DateTime.now().millisecondsSinceEpoch}_$originalFileName';
+
+    // Example: 'product_images/170170170_product_image.jpg'
+    final String storagePath = '$storageFolderProductImages/$fileName';
+
+    final Reference ref = FirebaseStorage.instance.ref().child(storagePath);
+
+    final UploadTask uploadTask = ref.putFile(file);
+    final TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
+
+    final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+    return ImageModel(
+      downloadUrl: downloadUrl,
+      storagePath: storagePath,
+      uploadedAt: DateTime.now(),
+    );
+  }
+
+  /// Increment total product quantity for a given category document.
+  static Future<void> incrementCategoryProductCount({
+    required String categoryId,
+    required int quantity,
+  }) async {
+    if (quantity <= 0) return;
+
+    final DocumentReference<Map<String, dynamic>> doc = _db
+        .collection(collectionCategory)
+        .doc(categoryId);
+
+    await doc.update(<String, Object?>{
+      categoryFieldProductCount: FieldValue.increment(quantity),
+    });
+  }
+
+  /// Increment total product quantity for a given brand document.
+  static Future<void> incrementBrandProductCount({
+    required String brandId,
+    required int quantity,
+  }) async {
+    if (quantity <= 0) return;
+
+    final DocumentReference<Map<String, dynamic>> doc = _db
+        .collection(collectionBrand)
+        .doc(brandId);
+
+    await doc.update(<String, Object?>{
+      brandFieldProductCount: FieldValue.increment(quantity),
+    });
   }
 }

@@ -4,6 +4,11 @@ part 'category.freezed.dart';
 
 part 'category.g.dart';
 
+const String collectionCategory = 'Categories';
+const String categoryFieldId = 'id';
+const String categoryFieldName = 'name';
+const String categoryFieldProductCount = 'productCount';
+
 @unfreezed
 class Category with _$Category {
   factory Category({

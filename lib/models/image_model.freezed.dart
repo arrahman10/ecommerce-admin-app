@@ -23,6 +23,8 @@ ImageModel _$ImageModelFromJson(Map<String, dynamic> json) {
 mixin _$ImageModel {
   String get downloadUrl => throw _privateConstructorUsedError;
   String get storagePath => throw _privateConstructorUsedError;
+  @TimestampConverter()
+  DateTime? get uploadedAt => throw _privateConstructorUsedError;
 
   /// Serializes this ImageModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -41,7 +43,11 @@ abstract class $ImageModelCopyWith<$Res> {
     $Res Function(ImageModel) then,
   ) = _$ImageModelCopyWithImpl<$Res, ImageModel>;
   @useResult
-  $Res call({String downloadUrl, String storagePath});
+  $Res call({
+    String downloadUrl,
+    String storagePath,
+    @TimestampConverter() DateTime? uploadedAt,
+  });
 }
 
 /// @nodoc
@@ -58,7 +64,11 @@ class _$ImageModelCopyWithImpl<$Res, $Val extends ImageModel>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? downloadUrl = null, Object? storagePath = null}) {
+  $Res call({
+    Object? downloadUrl = null,
+    Object? storagePath = null,
+    Object? uploadedAt = freezed,
+  }) {
     return _then(
       _value.copyWith(
             downloadUrl: null == downloadUrl
@@ -69,6 +79,10 @@ class _$ImageModelCopyWithImpl<$Res, $Val extends ImageModel>
                 ? _value.storagePath
                 : storagePath // ignore: cast_nullable_to_non_nullable
                       as String,
+            uploadedAt: freezed == uploadedAt
+                ? _value.uploadedAt
+                : uploadedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
           )
           as $Val,
     );
@@ -84,7 +98,11 @@ abstract class _$$ImageModelImplCopyWith<$Res>
   ) = __$$ImageModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String downloadUrl, String storagePath});
+  $Res call({
+    String downloadUrl,
+    String storagePath,
+    @TimestampConverter() DateTime? uploadedAt,
+  });
 }
 
 /// @nodoc
@@ -100,7 +118,11 @@ class __$$ImageModelImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? downloadUrl = null, Object? storagePath = null}) {
+  $Res call({
+    Object? downloadUrl = null,
+    Object? storagePath = null,
+    Object? uploadedAt = freezed,
+  }) {
     return _then(
       _$ImageModelImpl(
         downloadUrl: null == downloadUrl
@@ -111,6 +133,10 @@ class __$$ImageModelImplCopyWithImpl<$Res>
             ? _value.storagePath
             : storagePath // ignore: cast_nullable_to_non_nullable
                   as String,
+        uploadedAt: freezed == uploadedAt
+            ? _value.uploadedAt
+            : uploadedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
       ),
     );
   }
@@ -122,6 +148,7 @@ class _$ImageModelImpl implements _ImageModel {
   const _$ImageModelImpl({
     required this.downloadUrl,
     required this.storagePath,
+    @TimestampConverter() this.uploadedAt,
   });
 
   factory _$ImageModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -131,10 +158,13 @@ class _$ImageModelImpl implements _ImageModel {
   final String downloadUrl;
   @override
   final String storagePath;
+  @override
+  @TimestampConverter()
+  final DateTime? uploadedAt;
 
   @override
   String toString() {
-    return 'ImageModel(downloadUrl: $downloadUrl, storagePath: $storagePath)';
+    return 'ImageModel(downloadUrl: $downloadUrl, storagePath: $storagePath, uploadedAt: $uploadedAt)';
   }
 
   @override
@@ -145,12 +175,15 @@ class _$ImageModelImpl implements _ImageModel {
             (identical(other.downloadUrl, downloadUrl) ||
                 other.downloadUrl == downloadUrl) &&
             (identical(other.storagePath, storagePath) ||
-                other.storagePath == storagePath));
+                other.storagePath == storagePath) &&
+            (identical(other.uploadedAt, uploadedAt) ||
+                other.uploadedAt == uploadedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, downloadUrl, storagePath);
+  int get hashCode =>
+      Object.hash(runtimeType, downloadUrl, storagePath, uploadedAt);
 
   /// Create a copy of ImageModel
   /// with the given fields replaced by the non-null parameter values.
@@ -170,6 +203,7 @@ abstract class _ImageModel implements ImageModel {
   const factory _ImageModel({
     required final String downloadUrl,
     required final String storagePath,
+    @TimestampConverter() final DateTime? uploadedAt,
   }) = _$ImageModelImpl;
 
   factory _ImageModel.fromJson(Map<String, dynamic> json) =
@@ -179,6 +213,9 @@ abstract class _ImageModel implements ImageModel {
   String get downloadUrl;
   @override
   String get storagePath;
+  @override
+  @TimestampConverter()
+  DateTime? get uploadedAt;
 
   /// Create a copy of ImageModel
   /// with the given fields replaced by the non-null parameter values.

@@ -27,33 +27,19 @@ const String productFieldCreatedAt = 'createdAt';
 class Product with _$Product {
   const factory Product({
     @JsonKey(name: productFieldId) String? id,
-
     @JsonKey(name: productFieldName) required String name,
-
     @JsonKey(name: productFieldShortDescription) String? shortDescription,
-
     @JsonKey(name: productFieldLongDescription) String? longDescription,
-
     @JsonKey(name: productFieldCategoryId) required String categoryId,
-
     @JsonKey(name: productFieldCategoryName) required String categoryName,
-
     @JsonKey(name: productFieldBrandId) required String brandId,
-
     @JsonKey(name: productFieldBrandName) required String brandName,
-
     @JsonKey(name: productFieldPurchasePrice) required double purchasePrice,
-
     @JsonKey(name: productFieldSalePrice) required double salePrice,
-
     @JsonKey(name: productFieldStock) @Default(0) int stock,
-
     @JsonKey(name: productFieldDiscount) @Default(0.0) double discount,
-
     @JsonKey(name: productFieldImageUrl) String? imageUrl,
-
     @JsonKey(name: productFieldThumbnailUrl) String? thumbnailUrl,
-
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     DateTime? createdAt,

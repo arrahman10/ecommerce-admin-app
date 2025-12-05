@@ -14,6 +14,7 @@ import 'package:ecommerce_admin_app/pages/login_page.dart';
 import 'package:ecommerce_admin_app/pages/view_product_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
+import 'package:ecommerce_admin_app/providers/product_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<CategoryProvider>(
           create: (BuildContext context) => CategoryProvider(),
+        ),
+        ChangeNotifierProvider<ProductProvider>(
+          create: (BuildContext context) => ProductProvider(),
         ),
       ],
       child: const MyApp(),

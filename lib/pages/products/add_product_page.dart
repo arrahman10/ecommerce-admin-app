@@ -1,10 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ecommerce_admin_app/models/brand.dart';
 import 'package:ecommerce_admin_app/models/category.dart';
+import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
+import 'package:ecommerce_admin_app/providers/product_provider.dart';
+import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
 class AddProductPage extends StatefulWidget {
   static const String routeName = 'add_product';
@@ -32,6 +40,34 @@ class _AddProductPageState extends State<AddProductPage> {
 
   Category? _selectedCategory;
   Brand? _selectedBrand;
+
+  final ImagePicker _picker = ImagePicker();
+  XFile? _pickedImageFile;
+  bool _isSaving = false;
+
+  String? _validateRequiredDouble(String? value, String fieldLabel) {
+    final String trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '$fieldLabel is required';
+    }
+    final double? parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return 'Enter a valid positive $fieldLabel';
+    }
+    return null;
+  }
+
+  String? _validateRequiredInt(String? value, String fieldLabel) {
+    final String trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '$fieldLabel is required';
+    }
+    final int? parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return 'Enter a valid positive $fieldLabel';
+    }
+    return null;
+  }
 
   @override
   void dispose() {
@@ -84,7 +120,7 @@ class _AddProductPageState extends State<AddProductPage> {
         Text('Product image', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         InkWell(
-          onTap: () {},
+          onTap: _showImageSourceDialog,
           child: Container(
             height: 150,
             decoration: BoxDecoration(
@@ -92,15 +128,71 @@ class _AddProductPageState extends State<AddProductPage> {
               borderRadius: BorderRadius.circular(8.0),
             ),
             alignment: Alignment.center,
-            child: Text(
-              'Tap to select image\n(from camera or gallery)',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: _pickedImageFile == null
+                ? Text(
+                    'Tap to select image\n(from camera or gallery)',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.file(
+                      File(_pickedImageFile!.path),
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                  ),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _showImageSourceDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select image source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? picked = await _picker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 80,
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _pickedImageFile = picked;
+      });
+    }
   }
 
   // Category + Brand section
@@ -124,7 +216,7 @@ class _AddProductPageState extends State<AddProductPage> {
             title: const Text('Category'),
             subtitle: Text(
               _selectedCategory != null
-                  ? '${_selectedCategory!.name} (${_selectedCategory!.productCount} products)'
+                  ? _selectedCategory!.name
                   : (categories.isEmpty
                         ? 'No category available'
                         : 'Tap to select category'),
@@ -139,9 +231,7 @@ class _AddProductPageState extends State<AddProductPage> {
             title: const Text('Brand'),
             subtitle: Text(
               _selectedBrand != null
-                  ? (_selectedBrand!.productCount > 0
-                        ? '${_selectedBrand!.name} (${_selectedBrand!.productCount} products)'
-                        : _selectedBrand!.name)
+                  ? _selectedBrand!.name
                   : (brands.isEmpty
                         ? 'No brand available'
                         : 'Tap to select brand'),
@@ -161,16 +251,15 @@ class _AddProductPageState extends State<AddProductPage> {
   ) async {
     final Category? selected = await showDialog<Category>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return SimpleDialog(
           title: const Text('Select category'),
           children: <Widget>[
             for (final Category category in categories)
               SimpleDialogOption(
-                onPressed: () => Navigator.pop<Category>(context, category),
-                child: Text(
-                  '${category.name} (${category.productCount} products)',
-                ),
+                onPressed: () =>
+                    Navigator.pop<Category>(dialogContext, category),
+                child: Text(category.name),
               ),
           ],
         );
@@ -190,18 +279,14 @@ class _AddProductPageState extends State<AddProductPage> {
   ) async {
     final Brand? selected = await showDialog<Brand>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return SimpleDialog(
           title: const Text('Select brand'),
           children: <Widget>[
             for (final Brand brand in brands)
               SimpleDialogOption(
-                onPressed: () => Navigator.pop<Brand>(context, brand),
-                child: Text(
-                  brand.productCount > 0
-                      ? '${brand.name} (${brand.productCount} products)'
-                      : brand.name,
-                ),
+                onPressed: () => Navigator.pop<Brand>(dialogContext, brand),
+                child: Text(brand.name),
               ),
           ],
         );
@@ -282,6 +367,8 @@ class _AddProductPageState extends State<AddProductPage> {
                   border: OutlineInputBorder(),
                 ),
                 textInputAction: TextInputAction.next,
+                validator: (String? value) =>
+                    _validateRequiredDouble(value, 'Purchase price'),
               ),
             ),
             const SizedBox(width: 12),
@@ -296,6 +383,8 @@ class _AddProductPageState extends State<AddProductPage> {
                   border: OutlineInputBorder(),
                 ),
                 textInputAction: TextInputAction.next,
+                validator: (String? value) =>
+                    _validateRequiredDouble(value, 'Sale price'),
               ),
             ),
           ],
@@ -321,7 +410,9 @@ class _AddProductPageState extends State<AddProductPage> {
                   labelText: 'Quantity in stock',
                   border: OutlineInputBorder(),
                 ),
-                textInputAction: TextInputAction.next,
+                textInputAction: TextInputAction.done,
+                validator: (String? value) =>
+                    _validateRequiredInt(value, 'Quantity in stock'),
               ),
             ),
             const SizedBox(width: 12),
@@ -348,31 +439,111 @@ class _AddProductPageState extends State<AddProductPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _handleSubmit,
-        child: const Text('Save product (skeleton)'),
+        onPressed: _isSaving ? null : _handleSubmit,
+        child: Text(_isSaving ? 'Saving...' : 'Save product'),
       ),
     );
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
+    if (_pickedImageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a product image.')),
+      );
+      return;
+    }
+
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category.')),
+      );
+      return;
+    }
+
+    if (_selectedBrand == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a brand.')));
+      return;
+    }
+
     final bool isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
       return;
     }
 
-    if (_selectedCategory == null || _selectedBrand == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select both category and brand.')),
-      );
-      return;
-    }
+    final ProductProvider productProvider = context.read<ProductProvider>();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Form is valid with category and brand. Product save logic will be implemented in the next commits.',
-        ),
-      ),
+    final double purchasePrice = double.parse(
+      _purchasePriceController.text.trim(),
     );
+    final double salePrice = double.parse(_salePriceController.text.trim());
+    final int stock = int.parse(_stockController.text.trim());
+
+    final double discount = _discountController.text.trim().isEmpty
+        ? 0.0
+        : double.parse(_discountController.text.trim());
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    EasyLoading.show(status: 'Saving product...');
+
+    try {
+      await productProvider.addProductWithImage(
+        imageFile: File(_pickedImageFile!.path),
+
+        category: _selectedCategory!,
+        brand: _selectedBrand!,
+
+        name: _nameController.text,
+        shortDescription: _shortDescriptionController.text,
+        longDescription: _longDescriptionController.text,
+
+        purchasePrice: purchasePrice,
+        salePrice: salePrice,
+        discount: discount,
+        stock: stock,
+      );
+
+      if (!mounted) return;
+
+      showMsg(context, 'Product added successfully');
+
+      _resetForm();
+
+      context.goNamed(DashboardPage.routeName);
+    } catch (e) {
+      if (!mounted) return;
+
+      showMsg(context, 'Failed to save product: $e');
+    } finally {
+      EasyLoading.dismiss();
+
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+
+    _nameController.clear();
+    _shortDescriptionController.clear();
+    _longDescriptionController.clear();
+    _purchasePriceController.clear();
+    _salePriceController.clear();
+    _stockController.clear();
+    _discountController.clear();
+
+    setState(() {
+      _selectedCategory = null;
+      _selectedBrand = null;
+      _pickedImageFile = null;
+    });
   }
 }

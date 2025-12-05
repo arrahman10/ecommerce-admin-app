@@ -29,13 +29,13 @@ const List<DashboardModel> dashboardModelList = <DashboardModel>[
     routeName: ViewProductPage.routeName,
   ),
   DashboardModel(
-    title: 'Brands',
-    iconData: Icons.category_outlined,
-    routeName: BrandPage.routeName,
-  ),
-  DashboardModel(
     title: 'Categories',
     iconData: Icons.list_alt_outlined,
     routeName: CategoryPage.routeName,
+  ),
+  DashboardModel(
+    title: 'Brands',
+    iconData: Icons.category_outlined,
+    routeName: BrandPage.routeName,
   ),
 ];

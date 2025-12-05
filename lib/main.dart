@@ -89,16 +89,16 @@ final GoRouter _router = GoRouter(
               const ViewProductPage(),
         ),
         GoRoute(
-          name: BrandPage.routeName,
-          path: BrandPage.routeName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const BrandPage(),
-        ),
-        GoRoute(
           name: CategoryPage.routeName,
           path: CategoryPage.routeName,
           builder: (BuildContext context, GoRouterState state) =>
               const CategoryPage(),
+        ),
+        GoRoute(
+          name: BrandPage.routeName,
+          path: BrandPage.routeName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const BrandPage(),
         ),
       ],
     ),

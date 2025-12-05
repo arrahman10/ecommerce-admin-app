@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/firebase_options.dart';
-import 'package:ecommerce_admin_app/pages/add_product_page.dart';
+import 'package:ecommerce_admin_app/pages/products/add_product_page.dart';
 import 'package:ecommerce_admin_app/pages/brands/brand_page.dart';
 import 'package:ecommerce_admin_app/pages/categories/category_page.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';

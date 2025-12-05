@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:ecommerce_admin_app/pages/add_product_page.dart';
+import 'package:ecommerce_admin_app/pages/products/add_product_page.dart';
 import 'package:ecommerce_admin_app/pages/view_product_page.dart';
 import 'package:ecommerce_admin_app/pages/brands/brand_page.dart';
 import 'package:ecommerce_admin_app/pages/categories/category_page.dart';

@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:ecommerce_admin_app/models/brand.dart';
+import 'package:ecommerce_admin_app/models/category.dart';
+import 'package:ecommerce_admin_app/providers/brand_provider.dart';
+import 'package:ecommerce_admin_app/providers/category_provider.dart';
 
 class AddProductPage extends StatefulWidget {
   static const String routeName = 'add_product';
@@ -12,6 +18,7 @@ class AddProductPage extends StatefulWidget {
 class _AddProductPageState extends State<AddProductPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _shortDescriptionController =
       TextEditingController();
@@ -22,6 +29,9 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _salePriceController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
+
+  Category? _selectedCategory;
+  Brand? _selectedBrand;
 
   @override
   void dispose() {
@@ -66,7 +76,7 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  //Image section
+  // Image section
   Widget _buildImageSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,9 +84,7 @@ class _AddProductPageState extends State<AddProductPage> {
         Text('Product image', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         InkWell(
-          onTap: () {
-            // পরের commit এ এখানে image picker যুক্ত করব।
-          },
+          onTap: () {},
           child: Container(
             height: 150,
             decoration: BoxDecoration(
@@ -95,8 +103,14 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  //Category + Brand section
+  // Category + Brand section
   Widget _buildCategoryBrandSection(BuildContext context) {
+    final CategoryProvider categoryProvider = context.watch<CategoryProvider>();
+    final BrandProvider brandProvider = context.watch<BrandProvider>();
+
+    final List<Category> categories = categoryProvider.categoryList;
+    final List<Brand> brands = brandProvider.brandList;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -108,22 +122,100 @@ class _AddProductPageState extends State<AddProductPage> {
         Card(
           child: ListTile(
             title: const Text('Category'),
-            subtitle: const Text('Select category (coming soon)'),
-            onTap: () {},
+            subtitle: Text(
+              _selectedCategory != null
+                  ? '${_selectedCategory!.name} (${_selectedCategory!.productCount} products)'
+                  : (categories.isEmpty
+                        ? 'No category available'
+                        : 'Tap to select category'),
+            ),
+            onTap: categories.isEmpty
+                ? null
+                : () => _showCategorySelectionDialog(context, categories),
           ),
         ),
         Card(
           child: ListTile(
             title: const Text('Brand'),
-            subtitle: const Text('Select brand (coming soon)'),
-            onTap: () {},
+            subtitle: Text(
+              _selectedBrand != null
+                  ? (_selectedBrand!.productCount > 0
+                        ? '${_selectedBrand!.name} (${_selectedBrand!.productCount} products)'
+                        : _selectedBrand!.name)
+                  : (brands.isEmpty
+                        ? 'No brand available'
+                        : 'Tap to select brand'),
+            ),
+            onTap: brands.isEmpty
+                ? null
+                : () => _showBrandSelectionDialog(context, brands),
           ),
         ),
       ],
     );
   }
 
-  //Basic info: name + descriptions
+  Future<void> _showCategorySelectionDialog(
+    BuildContext context,
+    List<Category> categories,
+  ) async {
+    final Category? selected = await showDialog<Category>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: const Text('Select category'),
+          children: <Widget>[
+            for (final Category category in categories)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop<Category>(context, category),
+                child: Text(
+                  '${category.name} (${category.productCount} products)',
+                ),
+              ),
+          ],
+        );
+      },
+    );
+
+    if (selected != null && mounted) {
+      setState(() {
+        _selectedCategory = selected;
+      });
+    }
+  }
+
+  Future<void> _showBrandSelectionDialog(
+    BuildContext context,
+    List<Brand> brands,
+  ) async {
+    final Brand? selected = await showDialog<Brand>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: const Text('Select brand'),
+          children: <Widget>[
+            for (final Brand brand in brands)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop<Brand>(context, brand),
+                child: Text(
+                  brand.productCount > 0
+                      ? '${brand.name} (${brand.productCount} products)'
+                      : brand.name,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+
+    if (selected != null && mounted) {
+      setState(() {
+        _selectedBrand = selected;
+      });
+    }
+  }
+
+  // Basic info section
   Widget _buildBasicInfoSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +262,7 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  //Pricing section: purchase + sale price
+  // Pricing section
   Widget _buildPricingSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +304,7 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  //Inventory section: stock + discount
+  // Inventory section
   Widget _buildInventorySection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +343,7 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  //Submit button
+  // Submit button
   Widget _buildSubmitButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -268,10 +360,17 @@ class _AddProductPageState extends State<AddProductPage> {
       return;
     }
 
+    if (_selectedCategory == null || _selectedBrand == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select both category and brand.')),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Form is valid. Product save logic will be implemented in the next commits.',
+          'Form is valid with category and brand. Product save logic will be implemented in the next commits.',
         ),
       ),
     );

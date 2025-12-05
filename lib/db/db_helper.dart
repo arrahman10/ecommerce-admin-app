@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ecommerce_admin_app/models/brand.dart';
 import 'package:ecommerce_admin_app/models/category.dart';
+import 'package:ecommerce_admin_app/models/product.dart';
 
 class DbHelper {
   DbHelper._();
@@ -47,5 +48,24 @@ class DbHelper {
   /// Listen to all categories as a realtime stream.
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllCategories() {
     return _db.collection(collectionCategory).snapshots();
+  }
+
+  /// Add a new product document to the Products collection.
+  static Future<void> addProduct(Product product) async {
+    final DocumentReference<Map<String, dynamic>> doc = _db
+        .collection(collectionProduct)
+        .doc();
+
+    final Product updatedProduct = product.copyWith(
+      id: doc.id,
+      createdAt: product.createdAt ?? DateTime.now(),
+    );
+
+    await doc.set(updatedProduct.toJson());
+  }
+
+  /// Listen to all products as a realtime stream.
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllProducts() {
+    return _db.collection(collectionProduct).snapshots();
   }
 }

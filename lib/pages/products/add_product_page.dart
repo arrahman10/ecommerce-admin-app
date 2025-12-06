@@ -43,6 +43,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
   final ImagePicker _picker = ImagePicker();
   XFile? _pickedImageFile;
+  DateTime? _selectedPurchaseDate;
   bool _isSaving = false;
 
   String? _validateRequiredDouble(String? value, String fieldLabel) {
@@ -144,6 +145,19 @@ class _AddProductPageState extends State<AddProductPage> {
                   ),
           ),
         ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _pickPurchaseDate,
+            icon: const Icon(Icons.date_range),
+            label: Text(
+              _selectedPurchaseDate == null
+                  ? 'Select purchase date'
+                  : _formatDate(_selectedPurchaseDate!),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -193,6 +207,29 @@ class _AddProductPageState extends State<AddProductPage> {
         _pickedImageFile = picked;
       });
     }
+  }
+
+  Future<void> _pickPurchaseDate() async {
+    final DateTime now = DateTime.now();
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedPurchaseDate ?? now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 5),
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _selectedPurchaseDate = picked;
+      });
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final String day = date.day.toString().padLeft(2, '0');
+    final String month = date.month.toString().padLeft(2, '0');
+    final String year = date.year.toString();
+    return '$day/$month/$year';
   }
 
   // Category + Brand section
@@ -494,6 +531,8 @@ class _AddProductPageState extends State<AddProductPage> {
       await productProvider.addProductWithImage(
         imageFile: File(_pickedImageFile!.path),
 
+        purchaseDate: _selectedPurchaseDate,
+
         category: _selectedCategory!,
         brand: _selectedBrand!,
 
@@ -503,8 +542,8 @@ class _AddProductPageState extends State<AddProductPage> {
 
         purchasePrice: purchasePrice,
         salePrice: salePrice,
-        discount: discount,
         stock: stock,
+        discount: discount,
       );
 
       if (!mounted) return;
@@ -541,9 +580,10 @@ class _AddProductPageState extends State<AddProductPage> {
     _discountController.clear();
 
     setState(() {
+      _pickedImageFile = null;
+      _selectedPurchaseDate = null;
       _selectedCategory = null;
       _selectedBrand = null;
-      _pickedImageFile = null;
     });
   }
 }

@@ -17,6 +17,7 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> addProductWithImage({
     required File imageFile,
+    DateTime? purchaseDate,
     required Category category,
     required Brand brand,
     required String name,
@@ -34,6 +35,8 @@ class ProductProvider with ChangeNotifier {
     final Product product = Product(
       imageUrl: thumbnail.downloadUrl,
       thumbnailUrl: thumbnail.downloadUrl,
+
+      purchaseDate: purchaseDate ?? DateTime.now(),
 
       categoryId: category.id ?? '',
       categoryName: category.name,

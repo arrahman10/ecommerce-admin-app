@@ -23,12 +23,13 @@ Product _$ProductFromJson(Map<String, dynamic> json) {
 mixin _$Product {
   @JsonKey(name: productFieldId)
   String? get id => throw _privateConstructorUsedError;
-  @JsonKey(name: productFieldName)
-  String get name => throw _privateConstructorUsedError;
-  @JsonKey(name: productFieldShortDescription)
-  String? get shortDescription => throw _privateConstructorUsedError;
-  @JsonKey(name: productFieldLongDescription)
-  String? get longDescription => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldImageUrl)
+  String? get imageUrl => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldThumbnailUrl)
+  String? get thumbnailUrl => throw _privateConstructorUsedError;
+  @TimestampConverter()
+  @JsonKey(name: productFieldPurchaseDate)
+  DateTime? get purchaseDate => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldCategoryId)
   String get categoryId => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldCategoryName)
@@ -37,6 +38,12 @@ mixin _$Product {
   String get brandId => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldBrandName)
   String get brandName => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldName)
+  String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldShortDescription)
+  String? get shortDescription => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldLongDescription)
+  String? get longDescription => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldPurchasePrice)
   double get purchasePrice => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldSalePrice)
@@ -45,10 +52,6 @@ mixin _$Product {
   int get stock => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldDiscount)
   double get discount => throw _privateConstructorUsedError;
-  @JsonKey(name: productFieldImageUrl)
-  String? get imageUrl => throw _privateConstructorUsedError;
-  @JsonKey(name: productFieldThumbnailUrl)
-  String? get thumbnailUrl => throw _privateConstructorUsedError;
   @TimestampConverter()
   @JsonKey(name: productFieldCreatedAt)
   DateTime? get createdAt => throw _privateConstructorUsedError;
@@ -69,19 +72,22 @@ abstract class $ProductCopyWith<$Res> {
   @useResult
   $Res call({
     @JsonKey(name: productFieldId) String? id,
-    @JsonKey(name: productFieldName) String name,
-    @JsonKey(name: productFieldShortDescription) String? shortDescription,
-    @JsonKey(name: productFieldLongDescription) String? longDescription,
+    @JsonKey(name: productFieldImageUrl) String? imageUrl,
+    @JsonKey(name: productFieldThumbnailUrl) String? thumbnailUrl,
+    @TimestampConverter()
+    @JsonKey(name: productFieldPurchaseDate)
+    DateTime? purchaseDate,
     @JsonKey(name: productFieldCategoryId) String categoryId,
     @JsonKey(name: productFieldCategoryName) String categoryName,
     @JsonKey(name: productFieldBrandId) String brandId,
     @JsonKey(name: productFieldBrandName) String brandName,
+    @JsonKey(name: productFieldName) String name,
+    @JsonKey(name: productFieldShortDescription) String? shortDescription,
+    @JsonKey(name: productFieldLongDescription) String? longDescription,
     @JsonKey(name: productFieldPurchasePrice) double purchasePrice,
     @JsonKey(name: productFieldSalePrice) double salePrice,
     @JsonKey(name: productFieldStock) int stock,
     @JsonKey(name: productFieldDiscount) double discount,
-    @JsonKey(name: productFieldImageUrl) String? imageUrl,
-    @JsonKey(name: productFieldThumbnailUrl) String? thumbnailUrl,
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     DateTime? createdAt,
@@ -104,19 +110,20 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
   @override
   $Res call({
     Object? id = freezed,
-    Object? name = null,
-    Object? shortDescription = freezed,
-    Object? longDescription = freezed,
+    Object? imageUrl = freezed,
+    Object? thumbnailUrl = freezed,
+    Object? purchaseDate = freezed,
     Object? categoryId = null,
     Object? categoryName = null,
     Object? brandId = null,
     Object? brandName = null,
+    Object? name = null,
+    Object? shortDescription = freezed,
+    Object? longDescription = freezed,
     Object? purchasePrice = null,
     Object? salePrice = null,
     Object? stock = null,
     Object? discount = null,
-    Object? imageUrl = freezed,
-    Object? thumbnailUrl = freezed,
     Object? createdAt = freezed,
   }) {
     return _then(
@@ -125,18 +132,18 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as String?,
-            name: null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
-                      as String,
-            shortDescription: freezed == shortDescription
-                ? _value.shortDescription
-                : shortDescription // ignore: cast_nullable_to_non_nullable
+            imageUrl: freezed == imageUrl
+                ? _value.imageUrl
+                : imageUrl // ignore: cast_nullable_to_non_nullable
                       as String?,
-            longDescription: freezed == longDescription
-                ? _value.longDescription
-                : longDescription // ignore: cast_nullable_to_non_nullable
+            thumbnailUrl: freezed == thumbnailUrl
+                ? _value.thumbnailUrl
+                : thumbnailUrl // ignore: cast_nullable_to_non_nullable
                       as String?,
+            purchaseDate: freezed == purchaseDate
+                ? _value.purchaseDate
+                : purchaseDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             categoryId: null == categoryId
                 ? _value.categoryId
                 : categoryId // ignore: cast_nullable_to_non_nullable
@@ -153,6 +160,18 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
                 ? _value.brandName
                 : brandName // ignore: cast_nullable_to_non_nullable
                       as String,
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            shortDescription: freezed == shortDescription
+                ? _value.shortDescription
+                : shortDescription // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            longDescription: freezed == longDescription
+                ? _value.longDescription
+                : longDescription // ignore: cast_nullable_to_non_nullable
+                      as String?,
             purchasePrice: null == purchasePrice
                 ? _value.purchasePrice
                 : purchasePrice // ignore: cast_nullable_to_non_nullable
@@ -169,14 +188,6 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
                 ? _value.discount
                 : discount // ignore: cast_nullable_to_non_nullable
                       as double,
-            imageUrl: freezed == imageUrl
-                ? _value.imageUrl
-                : imageUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            thumbnailUrl: freezed == thumbnailUrl
-                ? _value.thumbnailUrl
-                : thumbnailUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
             createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -197,19 +208,22 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
   @useResult
   $Res call({
     @JsonKey(name: productFieldId) String? id,
-    @JsonKey(name: productFieldName) String name,
-    @JsonKey(name: productFieldShortDescription) String? shortDescription,
-    @JsonKey(name: productFieldLongDescription) String? longDescription,
+    @JsonKey(name: productFieldImageUrl) String? imageUrl,
+    @JsonKey(name: productFieldThumbnailUrl) String? thumbnailUrl,
+    @TimestampConverter()
+    @JsonKey(name: productFieldPurchaseDate)
+    DateTime? purchaseDate,
     @JsonKey(name: productFieldCategoryId) String categoryId,
     @JsonKey(name: productFieldCategoryName) String categoryName,
     @JsonKey(name: productFieldBrandId) String brandId,
     @JsonKey(name: productFieldBrandName) String brandName,
+    @JsonKey(name: productFieldName) String name,
+    @JsonKey(name: productFieldShortDescription) String? shortDescription,
+    @JsonKey(name: productFieldLongDescription) String? longDescription,
     @JsonKey(name: productFieldPurchasePrice) double purchasePrice,
     @JsonKey(name: productFieldSalePrice) double salePrice,
     @JsonKey(name: productFieldStock) int stock,
     @JsonKey(name: productFieldDiscount) double discount,
-    @JsonKey(name: productFieldImageUrl) String? imageUrl,
-    @JsonKey(name: productFieldThumbnailUrl) String? thumbnailUrl,
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     DateTime? createdAt,
@@ -231,19 +245,20 @@ class __$$ProductImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = freezed,
-    Object? name = null,
-    Object? shortDescription = freezed,
-    Object? longDescription = freezed,
+    Object? imageUrl = freezed,
+    Object? thumbnailUrl = freezed,
+    Object? purchaseDate = freezed,
     Object? categoryId = null,
     Object? categoryName = null,
     Object? brandId = null,
     Object? brandName = null,
+    Object? name = null,
+    Object? shortDescription = freezed,
+    Object? longDescription = freezed,
     Object? purchasePrice = null,
     Object? salePrice = null,
     Object? stock = null,
     Object? discount = null,
-    Object? imageUrl = freezed,
-    Object? thumbnailUrl = freezed,
     Object? createdAt = freezed,
   }) {
     return _then(
@@ -252,18 +267,18 @@ class __$$ProductImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as String?,
-        name: null == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
-                  as String,
-        shortDescription: freezed == shortDescription
-            ? _value.shortDescription
-            : shortDescription // ignore: cast_nullable_to_non_nullable
+        imageUrl: freezed == imageUrl
+            ? _value.imageUrl
+            : imageUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
-        longDescription: freezed == longDescription
-            ? _value.longDescription
-            : longDescription // ignore: cast_nullable_to_non_nullable
+        thumbnailUrl: freezed == thumbnailUrl
+            ? _value.thumbnailUrl
+            : thumbnailUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
+        purchaseDate: freezed == purchaseDate
+            ? _value.purchaseDate
+            : purchaseDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         categoryId: null == categoryId
             ? _value.categoryId
             : categoryId // ignore: cast_nullable_to_non_nullable
@@ -280,6 +295,18 @@ class __$$ProductImplCopyWithImpl<$Res>
             ? _value.brandName
             : brandName // ignore: cast_nullable_to_non_nullable
                   as String,
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        shortDescription: freezed == shortDescription
+            ? _value.shortDescription
+            : shortDescription // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        longDescription: freezed == longDescription
+            ? _value.longDescription
+            : longDescription // ignore: cast_nullable_to_non_nullable
+                  as String?,
         purchasePrice: null == purchasePrice
             ? _value.purchasePrice
             : purchasePrice // ignore: cast_nullable_to_non_nullable
@@ -296,14 +323,6 @@ class __$$ProductImplCopyWithImpl<$Res>
             ? _value.discount
             : discount // ignore: cast_nullable_to_non_nullable
                   as double,
-        imageUrl: freezed == imageUrl
-            ? _value.imageUrl
-            : imageUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        thumbnailUrl: freezed == thumbnailUrl
-            ? _value.thumbnailUrl
-            : thumbnailUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
         createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -318,19 +337,22 @@ class __$$ProductImplCopyWithImpl<$Res>
 class _$ProductImpl implements _Product {
   const _$ProductImpl({
     @JsonKey(name: productFieldId) this.id,
-    @JsonKey(name: productFieldName) required this.name,
-    @JsonKey(name: productFieldShortDescription) this.shortDescription,
-    @JsonKey(name: productFieldLongDescription) this.longDescription,
+    @JsonKey(name: productFieldImageUrl) this.imageUrl,
+    @JsonKey(name: productFieldThumbnailUrl) this.thumbnailUrl,
+    @TimestampConverter()
+    @JsonKey(name: productFieldPurchaseDate)
+    this.purchaseDate,
     @JsonKey(name: productFieldCategoryId) required this.categoryId,
     @JsonKey(name: productFieldCategoryName) required this.categoryName,
     @JsonKey(name: productFieldBrandId) required this.brandId,
     @JsonKey(name: productFieldBrandName) required this.brandName,
+    @JsonKey(name: productFieldName) required this.name,
+    @JsonKey(name: productFieldShortDescription) this.shortDescription,
+    @JsonKey(name: productFieldLongDescription) this.longDescription,
     @JsonKey(name: productFieldPurchasePrice) required this.purchasePrice,
     @JsonKey(name: productFieldSalePrice) required this.salePrice,
     @JsonKey(name: productFieldStock) this.stock = 0,
     @JsonKey(name: productFieldDiscount) this.discount = 0.0,
-    @JsonKey(name: productFieldImageUrl) this.imageUrl,
-    @JsonKey(name: productFieldThumbnailUrl) this.thumbnailUrl,
     @TimestampConverter() @JsonKey(name: productFieldCreatedAt) this.createdAt,
   });
 
@@ -341,14 +363,15 @@ class _$ProductImpl implements _Product {
   @JsonKey(name: productFieldId)
   final String? id;
   @override
-  @JsonKey(name: productFieldName)
-  final String name;
+  @JsonKey(name: productFieldImageUrl)
+  final String? imageUrl;
   @override
-  @JsonKey(name: productFieldShortDescription)
-  final String? shortDescription;
+  @JsonKey(name: productFieldThumbnailUrl)
+  final String? thumbnailUrl;
   @override
-  @JsonKey(name: productFieldLongDescription)
-  final String? longDescription;
+  @TimestampConverter()
+  @JsonKey(name: productFieldPurchaseDate)
+  final DateTime? purchaseDate;
   @override
   @JsonKey(name: productFieldCategoryId)
   final String categoryId;
@@ -362,6 +385,15 @@ class _$ProductImpl implements _Product {
   @JsonKey(name: productFieldBrandName)
   final String brandName;
   @override
+  @JsonKey(name: productFieldName)
+  final String name;
+  @override
+  @JsonKey(name: productFieldShortDescription)
+  final String? shortDescription;
+  @override
+  @JsonKey(name: productFieldLongDescription)
+  final String? longDescription;
+  @override
   @JsonKey(name: productFieldPurchasePrice)
   final double purchasePrice;
   @override
@@ -374,19 +406,13 @@ class _$ProductImpl implements _Product {
   @JsonKey(name: productFieldDiscount)
   final double discount;
   @override
-  @JsonKey(name: productFieldImageUrl)
-  final String? imageUrl;
-  @override
-  @JsonKey(name: productFieldThumbnailUrl)
-  final String? thumbnailUrl;
-  @override
   @TimestampConverter()
   @JsonKey(name: productFieldCreatedAt)
   final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'Product(id: $id, name: $name, shortDescription: $shortDescription, longDescription: $longDescription, categoryId: $categoryId, categoryName: $categoryName, brandId: $brandId, brandName: $brandName, purchasePrice: $purchasePrice, salePrice: $salePrice, stock: $stock, discount: $discount, imageUrl: $imageUrl, thumbnailUrl: $thumbnailUrl, createdAt: $createdAt)';
+    return 'Product(id: $id, imageUrl: $imageUrl, thumbnailUrl: $thumbnailUrl, purchaseDate: $purchaseDate, categoryId: $categoryId, categoryName: $categoryName, brandId: $brandId, brandName: $brandName, name: $name, shortDescription: $shortDescription, longDescription: $longDescription, purchasePrice: $purchasePrice, salePrice: $salePrice, stock: $stock, discount: $discount, createdAt: $createdAt)';
   }
 
   @override
@@ -395,11 +421,12 @@ class _$ProductImpl implements _Product {
         (other.runtimeType == runtimeType &&
             other is _$ProductImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.shortDescription, shortDescription) ||
-                other.shortDescription == shortDescription) &&
-            (identical(other.longDescription, longDescription) ||
-                other.longDescription == longDescription) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.thumbnailUrl, thumbnailUrl) ||
+                other.thumbnailUrl == thumbnailUrl) &&
+            (identical(other.purchaseDate, purchaseDate) ||
+                other.purchaseDate == purchaseDate) &&
             (identical(other.categoryId, categoryId) ||
                 other.categoryId == categoryId) &&
             (identical(other.categoryName, categoryName) ||
@@ -407,6 +434,11 @@ class _$ProductImpl implements _Product {
             (identical(other.brandId, brandId) || other.brandId == brandId) &&
             (identical(other.brandName, brandName) ||
                 other.brandName == brandName) &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.shortDescription, shortDescription) ||
+                other.shortDescription == shortDescription) &&
+            (identical(other.longDescription, longDescription) ||
+                other.longDescription == longDescription) &&
             (identical(other.purchasePrice, purchasePrice) ||
                 other.purchasePrice == purchasePrice) &&
             (identical(other.salePrice, salePrice) ||
@@ -414,10 +446,6 @@ class _$ProductImpl implements _Product {
             (identical(other.stock, stock) || other.stock == stock) &&
             (identical(other.discount, discount) ||
                 other.discount == discount) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
-            (identical(other.thumbnailUrl, thumbnailUrl) ||
-                other.thumbnailUrl == thumbnailUrl) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -427,19 +455,20 @@ class _$ProductImpl implements _Product {
   int get hashCode => Object.hash(
     runtimeType,
     id,
-    name,
-    shortDescription,
-    longDescription,
+    imageUrl,
+    thumbnailUrl,
+    purchaseDate,
     categoryId,
     categoryName,
     brandId,
     brandName,
+    name,
+    shortDescription,
+    longDescription,
     purchasePrice,
     salePrice,
     stock,
     discount,
-    imageUrl,
-    thumbnailUrl,
     createdAt,
   );
 
@@ -460,20 +489,23 @@ class _$ProductImpl implements _Product {
 abstract class _Product implements Product {
   const factory _Product({
     @JsonKey(name: productFieldId) final String? id,
-    @JsonKey(name: productFieldName) required final String name,
-    @JsonKey(name: productFieldShortDescription) final String? shortDescription,
-    @JsonKey(name: productFieldLongDescription) final String? longDescription,
+    @JsonKey(name: productFieldImageUrl) final String? imageUrl,
+    @JsonKey(name: productFieldThumbnailUrl) final String? thumbnailUrl,
+    @TimestampConverter()
+    @JsonKey(name: productFieldPurchaseDate)
+    final DateTime? purchaseDate,
     @JsonKey(name: productFieldCategoryId) required final String categoryId,
     @JsonKey(name: productFieldCategoryName) required final String categoryName,
     @JsonKey(name: productFieldBrandId) required final String brandId,
     @JsonKey(name: productFieldBrandName) required final String brandName,
+    @JsonKey(name: productFieldName) required final String name,
+    @JsonKey(name: productFieldShortDescription) final String? shortDescription,
+    @JsonKey(name: productFieldLongDescription) final String? longDescription,
     @JsonKey(name: productFieldPurchasePrice)
     required final double purchasePrice,
     @JsonKey(name: productFieldSalePrice) required final double salePrice,
     @JsonKey(name: productFieldStock) final int stock,
     @JsonKey(name: productFieldDiscount) final double discount,
-    @JsonKey(name: productFieldImageUrl) final String? imageUrl,
-    @JsonKey(name: productFieldThumbnailUrl) final String? thumbnailUrl,
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     final DateTime? createdAt,
@@ -485,14 +517,15 @@ abstract class _Product implements Product {
   @JsonKey(name: productFieldId)
   String? get id;
   @override
-  @JsonKey(name: productFieldName)
-  String get name;
+  @JsonKey(name: productFieldImageUrl)
+  String? get imageUrl;
   @override
-  @JsonKey(name: productFieldShortDescription)
-  String? get shortDescription;
+  @JsonKey(name: productFieldThumbnailUrl)
+  String? get thumbnailUrl;
   @override
-  @JsonKey(name: productFieldLongDescription)
-  String? get longDescription;
+  @TimestampConverter()
+  @JsonKey(name: productFieldPurchaseDate)
+  DateTime? get purchaseDate;
   @override
   @JsonKey(name: productFieldCategoryId)
   String get categoryId;
@@ -506,6 +539,15 @@ abstract class _Product implements Product {
   @JsonKey(name: productFieldBrandName)
   String get brandName;
   @override
+  @JsonKey(name: productFieldName)
+  String get name;
+  @override
+  @JsonKey(name: productFieldShortDescription)
+  String? get shortDescription;
+  @override
+  @JsonKey(name: productFieldLongDescription)
+  String? get longDescription;
+  @override
   @JsonKey(name: productFieldPurchasePrice)
   double get purchasePrice;
   @override
@@ -517,12 +559,6 @@ abstract class _Product implements Product {
   @override
   @JsonKey(name: productFieldDiscount)
   double get discount;
-  @override
-  @JsonKey(name: productFieldImageUrl)
-  String? get imageUrl;
-  @override
-  @JsonKey(name: productFieldThumbnailUrl)
-  String? get thumbnailUrl;
   @override
   @TimestampConverter()
   @JsonKey(name: productFieldCreatedAt)

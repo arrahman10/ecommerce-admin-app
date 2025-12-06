@@ -121,7 +121,7 @@ class _AddProductPageState extends State<AddProductPage> {
         Text('Product image', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         InkWell(
-          onTap: _showImageSourceDialog,
+          onTap: _pickImageFromGallery,
           child: Container(
             height: 150,
             decoration: BoxDecoration(
@@ -130,10 +130,18 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
             alignment: Alignment.center,
             child: _pickedImageFile == null
-                ? Text(
-                    'Tap to select image\n(from camera or gallery)',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      const Icon(Icons.image, size: 40, color: Colors.grey),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No image selected\nUse the buttons below to add image',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
                   )
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
@@ -144,6 +152,26 @@ class _AddProductPageState extends State<AddProductPage> {
                     ),
                   ),
           ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickImageFromCamera,
+                icon: const Icon(Icons.photo_camera),
+                label: const Text('Capture'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickImageFromGallery,
+                icon: const Icon(Icons.photo_library),
+                label: const Text('Gallery'),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Align(
@@ -162,36 +190,12 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  Future<void> _showImageSourceDialog() async {
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select image source'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Camera'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  void _pickImageFromCamera() {
+    _pickImage(ImageSource.camera);
+  }
+
+  void _pickImageFromGallery() {
+    _pickImage(ImageSource.gallery);
   }
 
   Future<void> _pickImage(ImageSource source) async {

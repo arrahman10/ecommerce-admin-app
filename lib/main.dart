@@ -11,7 +11,7 @@ import 'package:ecommerce_admin_app/pages/brands/brand_page.dart';
 import 'package:ecommerce_admin_app/pages/categories/category_page.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
-import 'package:ecommerce_admin_app/pages/view_product_page.dart';
+import 'package:ecommerce_admin_app/pages/products/view_product_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';

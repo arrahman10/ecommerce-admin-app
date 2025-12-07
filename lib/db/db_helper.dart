@@ -69,11 +69,6 @@ class DbHelper {
     await doc.set(updatedProduct.toJson());
   }
 
-  /// Listen to all products as a realtime stream.
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllProducts() {
-    return _db.collection(collectionProduct).snapshots();
-  }
-
   /// Upload a single product image file to Firebase Storage
   /// and return an ImageModel with download URL + storage path.
   static Future<ImageModel> uploadProductImage(File file) async {
@@ -131,5 +126,13 @@ class DbHelper {
     await doc.update(<String, Object?>{
       brandFieldProductCount: FieldValue.increment(quantity),
     });
+  }
+
+  /// Listen to all products ordered by createdAt (latest first).
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllProducts() {
+    return _db
+        .collection(collectionProduct)
+        .orderBy(productFieldCreatedAt, descending: true)
+        .snapshots();
   }
 }

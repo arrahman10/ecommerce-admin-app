@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show ChangeNotifier;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ecommerce_admin_app/db/db_helper.dart';
 import 'package:ecommerce_admin_app/models/brand.dart';
@@ -10,10 +11,36 @@ import 'package:ecommerce_admin_app/models/product.dart';
 
 class ProductProvider with ChangeNotifier {
   final List<Product> _productList = <Product>[];
+  bool _isListening = false;
 
   List<Product> get productList => List.unmodifiable(_productList);
 
-  // future: loadProducts(), etc.
+  /// Load all products from Firestore ordered by latest createdAt.
+  void getAllProducts() {
+    if (_isListening) return;
+    _isListening = true;
+
+    DbHelper.getAllProducts().listen((
+      QuerySnapshot<Map<String, dynamic>> snapshot,
+    ) {
+      final List<Product> products = snapshot.docs
+          .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+            final Map<String, dynamic> data = doc.data();
+
+            // Ensure Firestore document id is reflected in the model as well.
+            data[productFieldId] = doc.id;
+
+            return Product.fromJson(data);
+          })
+          .toList(growable: false);
+
+      _productList
+        ..clear()
+        ..addAll(products);
+
+      notifyListeners();
+    });
+  }
 
   Future<void> addProductWithImage({
     required File imageFile,

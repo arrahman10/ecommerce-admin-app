@@ -135,4 +135,14 @@ class DbHelper {
         .orderBy(productFieldCreatedAt, descending: true)
         .snapshots();
   }
+
+  static Future<void> updateProductDescription(
+    String productId,
+    String? longDescription,
+  ) async {
+    // update only the longDescription field for a given product document
+    await _db.collection(collectionProduct).doc(productId).update(
+      <String, dynamic>{productFieldLongDescription: longDescription},
+    );
+  }
 }

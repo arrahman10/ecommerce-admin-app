@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:ecommerce_admin_app/models/product.dart';
+import 'package:ecommerce_admin_app/providers/product_provider.dart';
 import 'package:ecommerce_admin_app/utils/price_utils.dart';
 
 class ProductDetailsPage extends StatefulWidget {
@@ -18,9 +20,18 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   bool _available = true;
   bool _featured = false;
 
+  // this is the local product instance shown in the UI
+  late Product _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _product = widget.product;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Product product = widget.product;
+    final Product product = _product;
 
     return Scaffold(
       appBar: AppBar(title: Text(product.name)),
@@ -272,13 +283,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   // ---------- Description (read-only for now) ----------
 
+  // this section shows description preview and triggers the full view/edit dialog
   Widget _buildDescriptionSection(BuildContext context, Product product) {
-    final String description =
-        (product.longDescription?.trim().isNotEmpty ?? false)
-        ? product.longDescription!.trim()
-        : (product.shortDescription?.trim().isNotEmpty ?? false)
-        ? product.shortDescription!.trim()
-        : 'No description added';
+    final String longText = product.longDescription?.trim() ?? '';
+    final String shortText = product.shortDescription?.trim() ?? '';
+
+    // prefer longDescription, then shortDescription, otherwise show fallback text
+    final String description = longText.isNotEmpty
+        ? longText
+        : (shortText.isNotEmpty ? shortText : 'No description added');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,18 +315,79 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Description edit will be added later.'),
-                ),
-              );
-            },
+            onPressed: () => _showDescriptionDialog(context, product),
             child: const Text('Show full description'),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _showDescriptionDialog(
+    BuildContext context,
+    Product product,
+  ) async {
+    final ProductProvider provider = context.read<ProductProvider>();
+
+    final TextEditingController controller = TextEditingController(
+      text: product.longDescription ?? '',
+    );
+
+    // build a dialog to view and edit the full description
+    final String? updatedText = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(product.name),
+          content: SizedBox(
+            width: double.infinity,
+            child: TextField(
+              controller: controller,
+              maxLines: 15,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(controller.text.trim());
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // if user cancels or keeps text unchanged, do nothing
+    if (updatedText == null || updatedText == product.longDescription?.trim()) {
+      return;
+    }
+
+    // update new description in Firestore and in the local product list
+    await provider.updateProductDescription(
+      product: product,
+      longDescription: updatedText.isEmpty ? null : updatedText,
+    );
+
+    // also update the local product state so the updated description appears immediately in the UI
+    if (mounted) {
+      setState(() {
+        _product = _product.copyWith(
+          longDescription: updatedText.isEmpty ? null : updatedText,
+        );
+      });
+    }
   }
 
   // ---------- Available / Featured switches (UI only) ----------

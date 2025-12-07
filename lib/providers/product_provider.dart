@@ -42,6 +42,26 @@ class ProductProvider with ChangeNotifier {
     });
   }
 
+  Future<void> updateProductDescription({
+    required Product product,
+    required String? longDescription,
+  }) async {
+    final String? productId = product.id;
+    if (productId == null || productId.isEmpty) {
+      return;
+    }
+
+    // update description in Firestore via DbHelper
+    await DbHelper.updateProductDescription(productId, longDescription);
+
+    // update the in-memory product list so UI stays in sync
+    final int index = _productList.indexWhere((Product p) => p.id == productId);
+    if (index != -1) {
+      _productList[index] = product.copyWith(longDescription: longDescription);
+      notifyListeners();
+    }
+  }
+
   Future<void> addProductWithImage({
     required File imageFile,
     DateTime? purchaseDate,

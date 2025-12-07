@@ -6,11 +6,13 @@ import 'package:provider/provider.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/firebase_options.dart';
-import 'package:ecommerce_admin_app/pages/products/add_product_page.dart';
+import 'package:ecommerce_admin_app/models/product.dart';
 import 'package:ecommerce_admin_app/pages/brands/brand_page.dart';
 import 'package:ecommerce_admin_app/pages/categories/category_page.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 import 'package:ecommerce_admin_app/pages/login_page.dart';
+import 'package:ecommerce_admin_app/pages/products/add_product_page.dart';
+import 'package:ecommerce_admin_app/pages/products/product_details_page.dart';
 import 'package:ecommerce_admin_app/pages/products/view_product_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
@@ -24,11 +26,11 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<BrandProvider>(
-          create: (BuildContext context) => BrandProvider(),
-        ),
         ChangeNotifierProvider<CategoryProvider>(
           create: (BuildContext context) => CategoryProvider(),
+        ),
+        ChangeNotifierProvider<BrandProvider>(
+          create: (BuildContext context) => BrandProvider(),
         ),
         ChangeNotifierProvider<ProductProvider>(
           create: (BuildContext context) => ProductProvider(),
@@ -81,6 +83,18 @@ final GoRouter _router = GoRouter(
           const DashboardPage(),
       routes: <RouteBase>[
         GoRoute(
+          name: CategoryPage.routeName,
+          path: CategoryPage.routeName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const CategoryPage(),
+        ),
+        GoRoute(
+          name: BrandPage.routeName,
+          path: BrandPage.routeName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const BrandPage(),
+        ),
+        GoRoute(
           name: AddProductPage.routeName,
           path: AddProductPage.routeName,
           builder: (BuildContext context, GoRouterState state) =>
@@ -93,16 +107,12 @@ final GoRouter _router = GoRouter(
               const ViewProductPage(),
         ),
         GoRoute(
-          name: CategoryPage.routeName,
-          path: CategoryPage.routeName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const CategoryPage(),
-        ),
-        GoRoute(
-          name: BrandPage.routeName,
-          path: BrandPage.routeName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const BrandPage(),
+          name: ProductDetailsPage.routeName,
+          path: ProductDetailsPage.routeName,
+          builder: (BuildContext context, GoRouterState state) {
+            final Product product = state.extra! as Product;
+            return ProductDetailsPage(product: product);
+          },
         ),
       ],
     ),

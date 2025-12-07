@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ecommerce_admin_app/models/product.dart';
+import 'package:ecommerce_admin_app/pages/products/product_details_page.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
+import 'package:ecommerce_admin_app/utils/price_utils.dart';
 
 class ViewProductPage extends StatefulWidget {
   static const String routeName = 'view-products';
@@ -39,16 +42,39 @@ class _ViewProductPageState extends State<ViewProductPage> {
                 itemCount: products.length,
                 itemBuilder: (BuildContext context, int index) {
                   final Product product = products[index];
+                  final double finalPrice = calculateFinalPrice(product);
 
                   return ListTile(
                     leading: _buildThumbnail(product),
                     title: Text(product.name),
                     subtitle: Text('Stock: ${product.stock}'),
-                    trailing: Text(
-                      '৳${product.salePrice.toStringAsFixed(0)}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        if (product.discount > 0)
+                          Text(
+                            '৳${product.salePrice.toStringAsFixed(0)}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                          )
+                        else
+                          const SizedBox(height: 4),
+                        Text(
+                          '৳${finalPrice.toStringAsFixed(0)}',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
-                    onTap: () {},
+                    onTap: () {
+                      context.pushNamed(
+                        ProductDetailsPage.routeName,
+                        extra: product,
+                      );
+                    },
                   );
                 },
               );

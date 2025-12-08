@@ -1,6 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import 'package:ecommerce_admin_app/db/db_helper.dart';
+import 'package:ecommerce_admin_app/models/image_model.dart';
 import 'package:ecommerce_admin_app/models/product.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
 import 'package:ecommerce_admin_app/utils/price_utils.dart';
@@ -20,6 +26,7 @@ class ProductDetailsPage extends StatefulWidget {
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
   // this is the local product instance shown in the UI
   late Product _product;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -40,7 +47,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           children: <Widget>[
             _buildMainImage(product),
             const SizedBox(height: 16),
-            _buildAddImagesCard(context),
+            _buildAdditionalImagesSection(context, product),
             const SizedBox(height: 12),
             _buildPrimaryActionsRow(context),
             const SizedBox(height: 24),
@@ -92,45 +99,130 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // ---------- Add other images ----------
+  // ---------- Additional images: list + add/delete ----------
 
-  Widget _buildAddImagesCard(BuildContext context) {
+  // Section for managing additional product images (add, list, delete)
+  Widget _buildAdditionalImagesSection(BuildContext context, Product product) {
+    final String? productId = product.id;
+    if (productId == null || productId.isEmpty) {
+      // If there is no product id, skip additional images UI
+      return const SizedBox.shrink();
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey.shade300),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Additional images management will be added later.',
-              ),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Row(
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.add, size: 24),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text('Add other images', style: TextStyle(fontSize: 16)),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: DbHelper.getAdditionalProductImages(productId),
+          builder:
+              (
+                BuildContext context,
+                AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot,
+              ) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final List<QueryDocumentSnapshot<Map<String, dynamic>>> docs =
+                    snapshot.data?.docs ??
+                    <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+
+                final int imageCount = docs.length;
+                final bool canAddMore = imageCount < 3;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          'Add other images',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_photo_alternate_outlined),
+                          tooltip: canAddMore
+                              ? 'Add additional image'
+                              : 'Maximum 3 images allowed',
+                          onPressed: canAddMore
+                              ? () => _showAdditionalImageSourceSheet(context)
+                              : () {
+                                  showMsg(
+                                    context,
+                                    'You can add up to 3 additional images.',
+                                  );
+                                },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (docs.isEmpty)
+                      Text(
+                        'No additional images yet.\nTap the plus icon to add.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    else
+                      SizedBox(
+                        height: 90,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: docs.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (BuildContext context, int index) {
+                            final QueryDocumentSnapshot<Map<String, dynamic>>
+                            doc = docs[index];
+                            final ImageModel image = ImageModel.fromJson(
+                              doc.data(),
+                            );
+
+                            return Stack(
+                              children: <Widget>[
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    image.downloadUrl,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: InkWell(
+                                    onTap: () => _confirmDeleteAdditionalImage(
+                                      context: context,
+                                      imageDocId: doc.id,
+                                      image: image,
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.all(4),
+                                      child: const Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                );
+              },
         ),
       ),
     );
@@ -701,5 +793,116 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       return '$fieldLabel must be zero or a positive integer';
     }
     return null;
+  }
+
+  // Bottom sheet to choose camera or gallery for additional image
+  Future<void> _showAdditionalImageSourceSheet(
+    BuildContext parentContext,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: parentContext,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Capture image'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickAdditionalImage(parentContext, ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickAdditionalImage(parentContext, ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Pick an additional image and upload/save it for the product
+  Future<void> _pickAdditionalImage(
+    BuildContext context,
+    ImageSource source,
+  ) async {
+    final XFile? picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 80,
+    );
+
+    if (picked == null) {
+      return;
+    }
+
+    if (_product.id == null || _product.id!.isEmpty) {
+      showMsg(context, 'Cannot add image: product id is missing');
+      return;
+    }
+
+    try {
+      await context.read<ProductProvider>().addAdditionalProductImage(
+        product: _product,
+        imageFile: File(picked.path),
+      );
+      if (!mounted) return;
+      showMsg(context, 'Additional image added');
+    } catch (e) {
+      if (!mounted) return;
+      showMsg(context, 'Failed to add additional image: $e');
+    }
+  }
+
+  // Show confirm dialog before deleting an additional image
+  Future<void> _confirmDeleteAdditionalImage({
+    required BuildContext context,
+    required String imageDocId,
+    required ImageModel image,
+  }) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete image'),
+          content: const Text('Are you sure you want to delete this image?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop<bool>(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop<bool>(context, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    if (!mounted) return;
+
+    try {
+      await context.read<ProductProvider>().deleteAdditionalProductImage(
+        product: _product,
+        imageDocId: imageDocId,
+        image: image,
+      );
+      showMsg(context, 'Additional image deleted');
+    } catch (e) {
+      showMsg(context, 'Failed to delete additional image: $e');
+    }
   }
 }

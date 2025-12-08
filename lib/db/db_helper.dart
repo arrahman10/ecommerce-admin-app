@@ -17,6 +17,7 @@ class DbHelper {
   static const String collectionAdmins = 'Admins';
   static const String collectionBrand = 'Brands';
   static const String collectionCategory = 'Categories';
+  static const String subCollectionAdditionalImages = 'AdditionalImages';
 
   /// Check if the given user id exists in the Admins collection.
   static Future<bool> isAdmin(String uid) async {
@@ -177,5 +178,49 @@ class DbHelper {
     await _db.collection(collectionProduct).doc(productId).update(
       <String, dynamic>{productFieldLongDescription: longDescription},
     );
+  }
+
+  // Add an additional image for a product under its sub-collection
+  static Future<void> addAdditionalProductImage({
+    required String productId,
+    required ImageModel image,
+  }) async {
+    await _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionAdditionalImages)
+        .doc()
+        .set(image.toJson());
+  }
+
+  // Get a stream of all additional images for a product
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAdditionalProductImages(
+    String productId,
+  ) {
+    return _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionAdditionalImages)
+        .orderBy('uploadedAt', descending: true)
+        .snapshots();
+  }
+
+  // Delete an additional image from both Storage and Firestore
+  static Future<void> deleteAdditionalProductImage({
+    required String productId,
+    required String imageDocId,
+    required String storagePath,
+  }) async {
+    // Storage file delete
+    final Reference ref = FirebaseStorage.instance.ref().child(storagePath);
+    await ref.delete();
+
+    // Firestore doc delete
+    await _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionAdditionalImages)
+        .doc(imageDocId)
+        .delete();
   }
 }

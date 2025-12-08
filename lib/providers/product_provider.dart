@@ -207,4 +207,38 @@ class ProductProvider with ChangeNotifier {
       }
     }
   }
+
+  // Upload and save an additional image for a product
+  Future<void> addAdditionalProductImage({
+    required Product product,
+    required File imageFile,
+  }) async {
+    if (product.id == null || product.id!.isEmpty) {
+      throw StateError('Cannot add image for a product without a valid id');
+    }
+
+    final ImageModel image = await DbHelper.uploadProductImage(imageFile);
+
+    await DbHelper.addAdditionalProductImage(
+      productId: product.id!,
+      image: image,
+    );
+  }
+
+  // Delete an additional image for a product
+  Future<void> deleteAdditionalProductImage({
+    required Product product,
+    required String imageDocId,
+    required ImageModel image,
+  }) async {
+    if (product.id == null || product.id!.isEmpty) {
+      throw StateError('Cannot delete image for a product without a valid id');
+    }
+
+    await DbHelper.deleteAdditionalProductImage(
+      productId: product.id!,
+      imageDocId: imageDocId,
+      storagePath: image.storagePath,
+    );
+  }
 }

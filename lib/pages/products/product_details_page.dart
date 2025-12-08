@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ecommerce_admin_app/models/product.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
 import 'package:ecommerce_admin_app/utils/price_utils.dart';
+import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   static const String routeName = 'product-details';
@@ -238,6 +239,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   // ---------- Price & stock summary ----------
 
+  // Show price & stock summary card and open edit dialog from here
   Widget _buildPriceAndStockSection(BuildContext context, Product product) {
     return Card(
       elevation: 0,
@@ -251,10 +253,37 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(
-                  'Sale price: ৳${product.salePrice.toStringAsFixed(2)}',
+                  'Price & stock',
                   style: Theme.of(context).textTheme.titleMedium,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Edit pricing and stock',
+                  onPressed: () => _showEditPriceStockDialog(context, product),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Sale price: ৳${product.salePrice.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Purchase price: ৳${product.purchasePrice.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: <Widget>[
+                Text(
+                  product.discount > 0
+                      ? 'Discount: ${product.discount.toStringAsFixed(1)}%'
+                      : 'No discount applied',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const Spacer(),
                 Text(
@@ -263,22 +292,170 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Purchase price: ৳${product.purchasePrice.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              product.discount > 0
-                  ? 'Discount: ${product.discount.toStringAsFixed(1)}%'
-                  : 'No discount applied',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _showEditPriceStockDialog(
+    BuildContext context,
+    Product product,
+  ) async {
+    // Separate form key for validation
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    // Prefill current values into the text fields
+    final TextEditingController purchasePriceController = TextEditingController(
+      text: _product.purchasePrice.toStringAsFixed(0),
+    );
+    final TextEditingController salePriceController = TextEditingController(
+      text: _product.salePrice.toStringAsFixed(0),
+    );
+    final TextEditingController discountController = TextEditingController(
+      text: _product.discount.toStringAsFixed(0),
+    );
+    final TextEditingController stockController = TextEditingController(
+      text: _product.stock.toString(),
+    );
+
+    final bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Edit pricing & stock'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextFormField(
+                    controller: purchasePriceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Purchase price',
+                    ),
+                    validator: (String? value) =>
+                        _validateRequiredPositiveDouble(
+                          value,
+                          'Purchase price',
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: salePriceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'Sale price'),
+                    validator: (String? value) =>
+                        _validateRequiredPositiveDouble(value, 'Sale price'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: discountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Discount (%)',
+                    ),
+                    validator: (String? value) =>
+                        _validateRequiredNonNegativeDouble(value, 'Discount'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: stockController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity in stock',
+                    ),
+                    validator: (String? value) =>
+                        _validateRequiredNonNegativeInt(
+                          value,
+                          'Quantity in stock',
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSave != true) {
+      return;
+    }
+
+    // Parse new values
+    final double newPurchasePrice = double.parse(
+      purchasePriceController.text.trim(),
+    );
+    final double newSalePrice = double.parse(salePriceController.text.trim());
+    final double newDiscount = discountController.text.trim().isEmpty
+        ? 0.0
+        : double.parse(discountController.text.trim());
+    final int newStock = int.parse(stockController.text.trim());
+
+    // If nothing changed, do not hit Firestore
+    if (newPurchasePrice == _product.purchasePrice &&
+        newSalePrice == _product.salePrice &&
+        newDiscount == _product.discount &&
+        newStock == _product.stock) {
+      return;
+    }
+
+    final ProductProvider provider = context.read<ProductProvider>();
+
+    try {
+      await provider.updateProductPricingAndStock(
+        product: _product,
+        purchasePrice: newPurchasePrice,
+        salePrice: newSalePrice,
+        discount: newDiscount,
+        stock: newStock,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      // Update local state so UI reflects immediately
+      setState(() {
+        _product = _product.copyWith(
+          purchasePrice: newPurchasePrice,
+          salePrice: newSalePrice,
+          discount: newDiscount,
+          stock: newStock,
+        );
+      });
+
+      showMsg(context, 'Product pricing and stock updated');
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showMsg(context, 'Failed to update product: $e');
+    }
   }
 
   // ---------- Description (read-only for now) ----------
@@ -433,5 +610,42 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         child: const Text('Notify users'),
       ),
     );
+  }
+
+  String? _validateRequiredPositiveDouble(String? value, String fieldLabel) {
+    final String trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '$fieldLabel is required';
+    }
+    final double? parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return '$fieldLabel must be a positive number';
+    }
+    return null;
+  }
+
+  String? _validateRequiredNonNegativeDouble(String? value, String fieldLabel) {
+    final String trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      // You can return null here if you want empty discount to be allowed
+      return null;
+    }
+    final double? parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed < 0) {
+      return '$fieldLabel must be zero or a positive number';
+    }
+    return null;
+  }
+
+  String? _validateRequiredNonNegativeInt(String? value, String fieldLabel) {
+    final String trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '$fieldLabel is required';
+    }
+    final int? parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed < 0) {
+      return '$fieldLabel must be zero or a positive integer';
+    }
+    return null;
   }
 }

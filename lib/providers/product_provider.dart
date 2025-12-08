@@ -62,6 +62,61 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
+  /// Update product pricing and stock while keeping category/brand productCount in sync
+  Future<void> updateProductPricingAndStock({
+    required Product product,
+    required double purchasePrice,
+    required double salePrice,
+    required double discount,
+    required int stock,
+  }) async {
+    final int oldStock = product.stock;
+    final int newStock = stock;
+    final int deltaStock = newStock - oldStock;
+
+    if (product.id == null || product.id!.isEmpty) {
+      throw StateError('Cannot update product without a valid id');
+    }
+
+    // Update product document in Firestore
+    await DbHelper.updateProductPricingAndStock(
+      productId: product.id!,
+      purchasePrice: purchasePrice,
+      salePrice: salePrice,
+      discount: discount,
+      stock: newStock,
+    );
+
+    // Adjust category/brand productCount when stock changes
+    if (deltaStock != 0) {
+      if (product.categoryId.isNotEmpty) {
+        await DbHelper.incrementCategoryProductCount(
+          categoryId: product.categoryId,
+          quantity: deltaStock,
+        );
+      }
+      if (product.brandId.isNotEmpty) {
+        await DbHelper.incrementBrandProductCount(
+          brandId: product.brandId,
+          quantity: deltaStock,
+        );
+      }
+    }
+    // Update the product inside local productList
+    final int index = _productList.indexWhere(
+      (Product p) => p.id == product.id,
+    );
+    if (index != -1) {
+      _productList[index] = product.copyWith(
+        purchasePrice: purchasePrice,
+        salePrice: salePrice,
+        discount: discount,
+        stock: newStock,
+      );
+      notifyListeners();
+    }
+  }
+
   Future<void> addProductWithImage({
     required File imageFile,
     DateTime? purchaseDate,

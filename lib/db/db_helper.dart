@@ -69,6 +69,25 @@ class DbHelper {
     await doc.set(updatedProduct.toJson());
   }
 
+  /// Helper to update product purchase price, sale price, discount and stock
+  static Future<void> updateProductPricingAndStock({
+    required String productId,
+    required double purchasePrice,
+    required double salePrice,
+    required double discount,
+    required int stock,
+  }) {
+    return _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .update(<String, dynamic>{
+          productFieldPurchasePrice: purchasePrice,
+          productFieldSalePrice: salePrice,
+          productFieldDiscount: discount,
+          productFieldStock: stock,
+        });
+  }
+
   /// Upload a single product image file to Firebase Storage
   /// and return an ImageModel with download URL + storage path.
   static Future<ImageModel> uploadProductImage(File file) async {
@@ -101,7 +120,7 @@ class DbHelper {
     required String categoryId,
     required int quantity,
   }) async {
-    if (quantity <= 0) return;
+    if (quantity == 0) return;
 
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionCategory)
@@ -117,7 +136,7 @@ class DbHelper {
     required String brandId,
     required int quantity,
   }) async {
-    if (quantity <= 0) return;
+    if (quantity == 0) return;
 
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionBrand)

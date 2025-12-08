@@ -23,6 +23,8 @@ _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
       salePrice: (json['salePrice'] as num).toDouble(),
       stock: (json['stock'] as num?)?.toInt() ?? 0,
       discount: (json['discount'] as num?)?.toDouble() ?? 0.0,
+      available: json['available'] as bool? ?? true,
+      featured: json['featured'] as bool? ?? false,
       createdAt: const TimestampConverter().fromJson(json['createdAt']),
     );
 
@@ -43,5 +45,7 @@ Map<String, dynamic> _$$ProductImplToJson(_$ProductImpl instance) =>
       'salePrice': instance.salePrice,
       'stock': instance.stock,
       'discount': instance.discount,
+      'available': instance.available,
+      'featured': instance.featured,
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
     };

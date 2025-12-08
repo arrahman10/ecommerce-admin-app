@@ -18,9 +18,6 @@ class ProductDetailsPage extends StatefulWidget {
 }
 
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
-  bool _available = true;
-  bool _featured = false;
-
   // this is the local product instance shown in the UI
   late Product _product;
 
@@ -53,7 +50,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             const SizedBox(height: 16),
             _buildDescriptionSection(context, product),
             const SizedBox(height: 16),
-            _buildStatusSection(context),
+            _buildAvailabilitySection(context),
             const SizedBox(height: 24),
             _buildNotifyUsersButton(context),
           ],
@@ -569,29 +566,85 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   // ---------- Available / Featured switches (UI only) ----------
 
-  Widget _buildStatusSection(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        SwitchListTile(
-          title: const Text('Available'),
-          value: _available,
-          onChanged: (bool value) {
-            setState(() {
-              _available = value;
-            });
-          },
+  // Product availability (Available / Featured) section
+  Widget _buildAvailabilitySection(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Availability',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Available'),
+              value: _product.available,
+              onChanged: (bool value) {
+                _updateAvailabilityAndFeatured(
+                  context: context,
+                  available: value,
+                  featured: _product.featured,
+                );
+              },
+            ),
+            const SizedBox(height: 4),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Featured'),
+              value: _product.featured,
+              onChanged: (bool value) {
+                _updateAvailabilityAndFeatured(
+                  context: context,
+                  available: _product.available,
+                  featured: value,
+                );
+              },
+            ),
+          ],
         ),
-        SwitchListTile(
-          title: const Text('Featured'),
-          value: _featured,
-          onChanged: (bool value) {
-            setState(() {
-              _featured = value;
-            });
-          },
-        ),
-      ],
+      ),
     );
+  }
+
+  // Helper to update Available and Featured flags in Firestore and local state
+  Future<void> _updateAvailabilityAndFeatured({
+    required BuildContext context,
+    required bool available,
+    required bool featured,
+  }) async {
+    final ProductProvider provider = context.read<ProductProvider>();
+
+    try {
+      await provider.updateProductAvailabilityAndFeatured(
+        product: _product,
+        available: available,
+        featured: featured,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _product = _product.copyWith(available: available, featured: featured);
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          // For debugging you can use debugPrint(e.toString()) instead of UI text
+          content: Text('Failed to update availability'),
+        ),
+      );
+    }
   }
 
   // ---------- Notify users button (placeholder) ----------
@@ -601,9 +654,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
+          // future: add real notify users logic (e.g. send push or email)
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Notify users feature will be added later.'),
+              content: Text('Notify users feature will be implemented later.'),
             ),
           );
         },

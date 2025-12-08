@@ -117,6 +117,36 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
+  /// Update product availability and featured flags and keep local list in sync
+  Future<void> updateProductAvailabilityAndFeatured({
+    required Product product,
+    required bool available,
+    required bool featured,
+  }) async {
+    final String? productId = product.id;
+    if (productId == null || productId.isEmpty) {
+      throw StateError('Cannot update product without a valid id');
+    }
+
+    // Update flags in Firestore
+    await DbHelper.updateProductAvailabilityAndFeatured(
+      productId: productId,
+      available: available,
+      featured: featured,
+    );
+
+    // Update the matching product inside local productList
+    final int index = _productList.indexWhere((Product p) => p.id == productId);
+
+    if (index != -1) {
+      _productList[index] = product.copyWith(
+        available: available,
+        featured: featured,
+      );
+      notifyListeners();
+    }
+  }
+
   Future<void> addProductWithImage({
     required File imageFile,
     DateTime? purchaseDate,

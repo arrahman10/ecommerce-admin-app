@@ -52,6 +52,10 @@ mixin _$Product {
   int get stock => throw _privateConstructorUsedError;
   @JsonKey(name: productFieldDiscount)
   double get discount => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldAvailable)
+  bool get available => throw _privateConstructorUsedError;
+  @JsonKey(name: productFieldFeatured)
+  bool get featured => throw _privateConstructorUsedError;
   @TimestampConverter()
   @JsonKey(name: productFieldCreatedAt)
   DateTime? get createdAt => throw _privateConstructorUsedError;
@@ -88,6 +92,8 @@ abstract class $ProductCopyWith<$Res> {
     @JsonKey(name: productFieldSalePrice) double salePrice,
     @JsonKey(name: productFieldStock) int stock,
     @JsonKey(name: productFieldDiscount) double discount,
+    @JsonKey(name: productFieldAvailable) bool available,
+    @JsonKey(name: productFieldFeatured) bool featured,
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     DateTime? createdAt,
@@ -124,6 +130,8 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
     Object? salePrice = null,
     Object? stock = null,
     Object? discount = null,
+    Object? available = null,
+    Object? featured = null,
     Object? createdAt = freezed,
   }) {
     return _then(
@@ -188,6 +196,14 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
                 ? _value.discount
                 : discount // ignore: cast_nullable_to_non_nullable
                       as double,
+            available: null == available
+                ? _value.available
+                : available // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            featured: null == featured
+                ? _value.featured
+                : featured // ignore: cast_nullable_to_non_nullable
+                      as bool,
             createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -224,6 +240,8 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
     @JsonKey(name: productFieldSalePrice) double salePrice,
     @JsonKey(name: productFieldStock) int stock,
     @JsonKey(name: productFieldDiscount) double discount,
+    @JsonKey(name: productFieldAvailable) bool available,
+    @JsonKey(name: productFieldFeatured) bool featured,
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     DateTime? createdAt,
@@ -259,6 +277,8 @@ class __$$ProductImplCopyWithImpl<$Res>
     Object? salePrice = null,
     Object? stock = null,
     Object? discount = null,
+    Object? available = null,
+    Object? featured = null,
     Object? createdAt = freezed,
   }) {
     return _then(
@@ -323,6 +343,14 @@ class __$$ProductImplCopyWithImpl<$Res>
             ? _value.discount
             : discount // ignore: cast_nullable_to_non_nullable
                   as double,
+        available: null == available
+            ? _value.available
+            : available // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        featured: null == featured
+            ? _value.featured
+            : featured // ignore: cast_nullable_to_non_nullable
+                  as bool,
         createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -353,6 +381,8 @@ class _$ProductImpl implements _Product {
     @JsonKey(name: productFieldSalePrice) required this.salePrice,
     @JsonKey(name: productFieldStock) this.stock = 0,
     @JsonKey(name: productFieldDiscount) this.discount = 0.0,
+    @JsonKey(name: productFieldAvailable) this.available = true,
+    @JsonKey(name: productFieldFeatured) this.featured = false,
     @TimestampConverter() @JsonKey(name: productFieldCreatedAt) this.createdAt,
   });
 
@@ -406,13 +436,19 @@ class _$ProductImpl implements _Product {
   @JsonKey(name: productFieldDiscount)
   final double discount;
   @override
+  @JsonKey(name: productFieldAvailable)
+  final bool available;
+  @override
+  @JsonKey(name: productFieldFeatured)
+  final bool featured;
+  @override
   @TimestampConverter()
   @JsonKey(name: productFieldCreatedAt)
   final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'Product(id: $id, imageUrl: $imageUrl, thumbnailUrl: $thumbnailUrl, purchaseDate: $purchaseDate, categoryId: $categoryId, categoryName: $categoryName, brandId: $brandId, brandName: $brandName, name: $name, shortDescription: $shortDescription, longDescription: $longDescription, purchasePrice: $purchasePrice, salePrice: $salePrice, stock: $stock, discount: $discount, createdAt: $createdAt)';
+    return 'Product(id: $id, imageUrl: $imageUrl, thumbnailUrl: $thumbnailUrl, purchaseDate: $purchaseDate, categoryId: $categoryId, categoryName: $categoryName, brandId: $brandId, brandName: $brandName, name: $name, shortDescription: $shortDescription, longDescription: $longDescription, purchasePrice: $purchasePrice, salePrice: $salePrice, stock: $stock, discount: $discount, available: $available, featured: $featured, createdAt: $createdAt)';
   }
 
   @override
@@ -446,6 +482,10 @@ class _$ProductImpl implements _Product {
             (identical(other.stock, stock) || other.stock == stock) &&
             (identical(other.discount, discount) ||
                 other.discount == discount) &&
+            (identical(other.available, available) ||
+                other.available == available) &&
+            (identical(other.featured, featured) ||
+                other.featured == featured) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -469,6 +509,8 @@ class _$ProductImpl implements _Product {
     salePrice,
     stock,
     discount,
+    available,
+    featured,
     createdAt,
   );
 
@@ -506,6 +548,8 @@ abstract class _Product implements Product {
     @JsonKey(name: productFieldSalePrice) required final double salePrice,
     @JsonKey(name: productFieldStock) final int stock,
     @JsonKey(name: productFieldDiscount) final double discount,
+    @JsonKey(name: productFieldAvailable) final bool available,
+    @JsonKey(name: productFieldFeatured) final bool featured,
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)
     final DateTime? createdAt,
@@ -559,6 +603,12 @@ abstract class _Product implements Product {
   @override
   @JsonKey(name: productFieldDiscount)
   double get discount;
+  @override
+  @JsonKey(name: productFieldAvailable)
+  bool get available;
+  @override
+  @JsonKey(name: productFieldFeatured)
+  bool get featured;
   @override
   @TimestampConverter()
   @JsonKey(name: productFieldCreatedAt)

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'package:ecommerce_admin_app/utils/timestamp_converter.dart';
 
 part 'product.freezed.dart';
@@ -22,6 +23,8 @@ const String productFieldPurchasePrice = 'purchasePrice';
 const String productFieldSalePrice = 'salePrice';
 const String productFieldStock = 'stock';
 const String productFieldDiscount = 'discount';
+const String productFieldAvailable = 'available';
+const String productFieldFeatured = 'featured';
 const String productFieldCreatedAt = 'createdAt';
 
 @freezed
@@ -46,6 +49,9 @@ class Product with _$Product {
     @JsonKey(name: productFieldSalePrice) required double salePrice,
     @JsonKey(name: productFieldStock) @Default(0) int stock,
     @JsonKey(name: productFieldDiscount) @Default(0.0) double discount,
+
+    @JsonKey(name: productFieldAvailable) @Default(true) bool available,
+    @JsonKey(name: productFieldFeatured) @Default(false) bool featured,
 
     @TimestampConverter()
     @JsonKey(name: productFieldCreatedAt)

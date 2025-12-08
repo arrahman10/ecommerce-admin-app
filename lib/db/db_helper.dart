@@ -41,6 +41,22 @@ class DbHelper {
     return _db.collection(collectionBrand).snapshots();
   }
 
+  /// Increment total product quantity for a given brand document.
+  static Future<void> incrementBrandProductCount({
+    required String brandId,
+    required int quantity,
+  }) async {
+    if (quantity == 0) return;
+
+    final DocumentReference<Map<String, dynamic>> doc = _db
+        .collection(collectionBrand)
+        .doc(brandId);
+
+    await doc.update(<String, Object?>{
+      brandFieldProductCount: FieldValue.increment(quantity),
+    });
+  }
+
   /// Add a new category document to the Categories collection.
   static Future<void> addCategory(Category category) async {
     final DocumentReference<Map<String, dynamic>> doc = _db
@@ -53,6 +69,49 @@ class DbHelper {
   /// Listen to all categories as a realtime stream.
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllCategories() {
     return _db.collection(collectionCategory).snapshots();
+  }
+
+  /// Increment total product quantity for a given category document.
+  static Future<void> incrementCategoryProductCount({
+    required String categoryId,
+    required int quantity,
+  }) async {
+    if (quantity == 0) return;
+
+    final DocumentReference<Map<String, dynamic>> doc = _db
+        .collection(collectionCategory)
+        .doc(categoryId);
+
+    await doc.update(<String, Object?>{
+      categoryFieldProductCount: FieldValue.increment(quantity),
+    });
+  }
+
+  /// Upload a single product image file to Firebase Storage
+  /// and return an ImageModel with download URL + storage path.
+  static Future<ImageModel> uploadProductImage(File file) async {
+    final String originalFileName = file.uri.pathSegments.isNotEmpty
+        ? file.uri.pathSegments.last
+        : 'product_image.jpg';
+
+    final String fileName =
+        '${DateTime.now().millisecondsSinceEpoch}_$originalFileName';
+
+    // Example: 'product_images/170170170_product_image.jpg'
+    final String storagePath = '$storageFolderProductImages/$fileName';
+
+    final Reference ref = FirebaseStorage.instance.ref().child(storagePath);
+
+    final UploadTask uploadTask = ref.putFile(file);
+    final TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
+
+    final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+    return ImageModel(
+      downloadUrl: downloadUrl,
+      storagePath: storagePath,
+      uploadedAt: DateTime.now(),
+    );
   }
 
   /// Add a new product document to the Products collection.
@@ -88,63 +147,18 @@ class DbHelper {
         });
   }
 
-  /// Upload a single product image file to Firebase Storage
-  /// and return an ImageModel with download URL + storage path.
-  static Future<ImageModel> uploadProductImage(File file) async {
-    final String originalFileName = file.uri.pathSegments.isNotEmpty
-        ? file.uri.pathSegments.last
-        : 'product_image.jpg';
-
-    final String fileName =
-        '${DateTime.now().millisecondsSinceEpoch}_$originalFileName';
-
-    // Example: 'product_images/170170170_product_image.jpg'
-    final String storagePath = '$storageFolderProductImages/$fileName';
-
-    final Reference ref = FirebaseStorage.instance.ref().child(storagePath);
-
-    final UploadTask uploadTask = ref.putFile(file);
-    final TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
-
-    final String downloadUrl = await snapshot.ref.getDownloadURL();
-
-    return ImageModel(
-      downloadUrl: downloadUrl,
-      storagePath: storagePath,
-      uploadedAt: DateTime.now(),
+  /// Helper to update product availability and featured flags
+  static Future<void> updateProductAvailabilityAndFeatured({
+    required String productId,
+    required bool available,
+    required bool featured,
+  }) {
+    return _db.collection(collectionProduct).doc(productId).update(
+      <String, dynamic>{
+        productFieldAvailable: available,
+        productFieldFeatured: featured,
+      },
     );
-  }
-
-  /// Increment total product quantity for a given category document.
-  static Future<void> incrementCategoryProductCount({
-    required String categoryId,
-    required int quantity,
-  }) async {
-    if (quantity == 0) return;
-
-    final DocumentReference<Map<String, dynamic>> doc = _db
-        .collection(collectionCategory)
-        .doc(categoryId);
-
-    await doc.update(<String, Object?>{
-      categoryFieldProductCount: FieldValue.increment(quantity),
-    });
-  }
-
-  /// Increment total product quantity for a given brand document.
-  static Future<void> incrementBrandProductCount({
-    required String brandId,
-    required int quantity,
-  }) async {
-    if (quantity == 0) return;
-
-    final DocumentReference<Map<String, dynamic>> doc = _db
-        .collection(collectionBrand)
-        .doc(brandId);
-
-    await doc.update(<String, Object?>{
-      brandFieldProductCount: FieldValue.increment(quantity),
-    });
   }
 
   /// Listen to all products ordered by createdAt (latest first).

@@ -256,4 +256,60 @@ class DbHelper {
         .orderBy(purchaseFieldPurchaseDate, descending: true)
         .snapshots();
   }
+
+  // Delete a single product document from the Products collection
+  static Future<void> deleteProductDocument(String productId) {
+    return _db.collection(collectionProduct).doc(productId).delete();
+  }
+
+  // Delete all additional images (Storage + Firestore docs) for a product
+  static Future<void> deleteAllAdditionalProductImagesForProduct(
+    String productId,
+  ) async {
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionAdditionalImages)
+        .get();
+
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
+        in snapshot.docs) {
+      final ImageModel image = ImageModel.fromJson(doc.data());
+      await deleteAdditionalProductImage(
+        productId: productId,
+        imageDocId: doc.id,
+        storagePath: image.storagePath,
+      );
+    }
+  }
+
+  // Helper to delete the main product image file from Firebase Storage
+  static Future<void> deleteMainProductImageForProduct(Product product) async {
+    final String? url = product.imageUrl?.isNotEmpty == true
+        ? product.imageUrl
+        : product.thumbnailUrl;
+
+    if (url == null || url.isEmpty) {
+      return;
+    }
+
+    try {
+      final Reference ref = FirebaseStorage.instance.refFromURL(url);
+      await ref.delete();
+    } catch (_) {}
+  }
+
+  // Delete all purchase history entries for a product
+  static Future<void> deleteAllPurchasesForProduct(String productId) async {
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionPurchases)
+        .get();
+
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
+        in snapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
 }

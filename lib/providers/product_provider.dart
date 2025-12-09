@@ -282,4 +282,47 @@ class ProductProvider with ChangeNotifier {
       storagePath: image.storagePath,
     );
   }
+
+  /// Delete a product and clean up related data (stock counts, extra images, purchases)
+  Future<void> deleteProduct({required Product product}) async {
+    final String? productId = product.id;
+    if (productId == null || productId.isEmpty) {
+      throw StateError('Cannot delete product without a valid id');
+    }
+
+    // Decrement category/brand productCount by current stock
+    if (product.stock > 0) {
+      if (product.categoryId.isNotEmpty) {
+        await DbHelper.incrementCategoryProductCount(
+          categoryId: product.categoryId,
+          quantity: -product.stock,
+        );
+      }
+      if (product.brandId.isNotEmpty) {
+        await DbHelper.incrementBrandProductCount(
+          brandId: product.brandId,
+          quantity: -product.stock,
+        );
+      }
+    }
+
+    // Delete all additional images
+    await DbHelper.deleteAllAdditionalProductImagesForProduct(productId);
+
+    // Delete all purchase history entries
+    await DbHelper.deleteAllPurchasesForProduct(productId);
+
+    // Finally delete the main product document
+    await DbHelper.deleteProductDocument(productId);
+
+    // Delete the main product image file from Storage
+    await DbHelper.deleteMainProductImageForProduct(product);
+
+    // Finally delete the main product document
+    await DbHelper.deleteProductDocument(productId);
+
+    // Remove the product from the local list
+    _productList.removeWhere((Product p) => p.id == productId);
+    notifyListeners();
+  }
 }

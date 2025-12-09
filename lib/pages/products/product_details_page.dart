@@ -40,7 +40,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     final Product product = _product;
 
     return Scaffold(
-      appBar: AppBar(title: Text(product.name)),
+      appBar: AppBar(
+        title: Text(product.name),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Delete product',
+            onPressed: () => _confirmDeleteProduct(context),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1147,6 +1156,52 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       showMsg(context, 'Additional image deleted');
     } catch (e) {
       showMsg(context, 'Failed to delete additional image: $e');
+    }
+  }
+
+  // Show confirmation dialog before deleting the product
+  Future<void> _confirmDeleteProduct(BuildContext context) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete product'),
+          content: Text('Are you sure you want to delete "${_product.name}"?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    final ProductProvider provider = context.read<ProductProvider>();
+
+    try {
+      await provider.deleteProduct(product: _product);
+
+      if (!mounted) {
+        return;
+      }
+
+      // Show success message first, then go back to the list
+      showMsg(context, 'Product deleted successfully');
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showMsg(context, 'Failed to delete product: $e');
     }
   }
 }

@@ -18,6 +18,7 @@ class DbHelper {
   static const String collectionBrand = 'Brands';
   static const String collectionCategory = 'Categories';
   static const String subCollectionAdditionalImages = 'AdditionalImages';
+  static const String subCollectionPurchases = 'Purchases';
 
   /// Check if the given user id exists in the Admins collection.
   static Future<bool> isAdmin(String uid) async {
@@ -222,5 +223,37 @@ class DbHelper {
         .collection(subCollectionAdditionalImages)
         .doc(imageDocId)
         .delete();
+  }
+
+  // Add a new purchase entry under a product's Purchases sub-collection
+  static Future<void> addPurchase({
+    required String productId,
+    required int quantity,
+    required double purchasePrice,
+    String? note,
+  }) async {
+    await _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionPurchases)
+        .add(<String, dynamic>{
+          purchaseFieldQuantity: quantity,
+          purchaseFieldPurchasePrice: purchasePrice,
+          purchaseFieldPurchaseDate: DateTime.now(),
+          if (note != null && note.trim().isNotEmpty)
+            purchaseFieldNote: note.trim(),
+        });
+  }
+
+  // Get a stream of all purchase history entries for a product
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getPurchases(
+    String productId,
+  ) {
+    return _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionPurchases)
+        .orderBy(purchaseFieldPurchaseDate, descending: true)
+        .snapshots();
   }
 }

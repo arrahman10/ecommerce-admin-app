@@ -117,6 +117,47 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
+  /// High-level helper to add purchase history and increase stock
+  Future<void> addPurchaseAndIncreaseStock({
+    required Product product,
+    required int quantity,
+    required double purchasePrice,
+    String? note,
+  }) async {
+    final String? productId = product.id;
+    if (productId == null || productId.isEmpty) {
+      throw StateError('Cannot repurchase without a valid product id');
+    }
+
+    if (quantity <= 0) {
+      throw ArgumentError.value(
+        quantity,
+        'quantity',
+        'Quantity must be a positive integer',
+      );
+    }
+
+    // Compute the new stock (old stock + newly purchased quantity)
+    final int newStock = product.stock + quantity;
+
+    // First, add a purchase record under the product
+    await DbHelper.addPurchase(
+      productId: productId,
+      quantity: quantity,
+      purchasePrice: purchasePrice,
+      note: note,
+    );
+
+    // Then reuse existing helper to update product document and local list
+    await updateProductPricingAndStock(
+      product: product,
+      purchasePrice: purchasePrice,
+      salePrice: product.salePrice,
+      discount: product.discount,
+      stock: newStock,
+    );
+  }
+
   /// Update product availability and featured flags and keep local list in sync
   Future<void> updateProductAvailabilityAndFeatured({
     required Product product,

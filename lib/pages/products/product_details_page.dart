@@ -9,6 +9,7 @@ import 'package:ecommerce_admin_app/db/db_helper.dart';
 import 'package:ecommerce_admin_app/models/image_model.dart';
 import 'package:ecommerce_admin_app/models/product.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
+import 'package:ecommerce_admin_app/utils/constants.dart';
 import 'package:ecommerce_admin_app/utils/price_utils.dart';
 import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
@@ -235,30 +236,261 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       children: <Widget>[
         Expanded(
           child: OutlinedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Re-purchase flow will be added later.'),
-                ),
-              );
-            },
+            onPressed: () => _showRepurchaseDialog(context),
+
             child: const Text('Re-purchase'),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Purchase history will be added later.'),
-                ),
-              );
-            },
+            onPressed: () => _showPurchaseHistoryBottomSheet(context),
+
             child: const Text('Purchase history'),
           ),
         ),
       ],
+    );
+  }
+
+  // Dialog to handle re-purchase flow (quantity, price, note)
+  Future<void> _showRepurchaseDialog(BuildContext context) async {
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    final TextEditingController quantityController = TextEditingController(
+      text: '',
+    );
+    final TextEditingController purchasePriceController = TextEditingController(
+      text: _product.purchasePrice.toStringAsFixed(0),
+    );
+    final TextEditingController noteController = TextEditingController();
+
+    final bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Re-purchase product'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextFormField(
+                    controller: quantityController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity to purchase',
+                    ),
+                    validator: (String? value) => _validateRequiredPositiveInt(
+                      value,
+                      'Quantity to purchase',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: purchasePriceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Purchase price (per unit)',
+                    ),
+                    validator: (String? value) =>
+                        _validateRequiredPositiveDouble(
+                          value,
+                          'Purchase price',
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: noteController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Note (optional)',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSave != true) {
+      return;
+    }
+
+    final int quantity = int.parse(quantityController.text.trim());
+    final double purchasePrice = double.parse(
+      purchasePriceController.text.trim(),
+    );
+    final String? note = noteController.text.trim().isEmpty
+        ? null
+        : noteController.text.trim();
+
+    final ProductProvider provider = context.read<ProductProvider>();
+
+    try {
+      await provider.addPurchaseAndIncreaseStock(
+        product: _product,
+        quantity: quantity,
+        purchasePrice: purchasePrice,
+        note: note,
+      );
+
+      if (!mounted) return;
+
+      // Update local product state so the UI reflects new stock & price
+      setState(() {
+        _product = _product.copyWith(
+          stock: _product.stock + quantity,
+          purchasePrice: purchasePrice,
+        );
+      });
+
+      showMsg(context, 'Purchase saved and stock updated');
+    } catch (e) {
+      if (!mounted) return;
+      showMsg(context, 'Failed to complete re-purchase: $e');
+    }
+  }
+
+  // Bottom sheet to show purchase history for this product
+  Future<void> _showPurchaseHistoryBottomSheet(BuildContext context) async {
+    final String? productId = _product.id;
+    if (productId == null || productId.isEmpty) {
+      showMsg(context, 'Cannot load purchase history: product id is missing');
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          child: SizedBox(
+            height: MediaQuery.of(sheetContext).size.height * 0.6,
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text(
+                        'Purchase history',
+                        style: Theme.of(sheetContext).textTheme.titleMedium,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: DbHelper.getPurchases(productId),
+                    builder:
+                        (
+                          BuildContext context,
+                          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                          snapshot,
+                        ) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          final List<
+                            QueryDocumentSnapshot<Map<String, dynamic>>
+                          >
+                          docs =
+                              snapshot.data?.docs ??
+                              <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+
+                          if (docs.isEmpty) {
+                            return const Center(
+                              child: Text('No purchase history yet.'),
+                            );
+                          }
+
+                          return ListView.separated(
+                            itemCount: docs.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (BuildContext context, int index) {
+                              final Map<String, dynamic> data = docs[index]
+                                  .data();
+
+                              final int quantity =
+                                  (data[purchaseFieldQuantity] as num?)
+                                      ?.toInt() ??
+                                  0;
+                              final double purchasePrice =
+                                  (data[purchaseFieldPurchasePrice] as num?)
+                                      ?.toDouble() ??
+                                  0.0;
+                              final Timestamp ts =
+                                  data[purchaseFieldPurchaseDate]
+                                      as Timestamp? ??
+                                  Timestamp.now();
+                              final DateTime date = ts.toDate();
+                              final String? note =
+                                  data[purchaseFieldNote] as String?;
+
+                              final String formattedDate =
+                                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
+                                  '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+                              final double totalCost = quantity * purchasePrice;
+
+                              return ListTile(
+                                title: Text(
+                                  '$quantity pcs × ৳${purchasePrice.toStringAsFixed(2)}',
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Total: ৳${totalCost.toStringAsFixed(2)}',
+                                    ),
+                                    Text('Date: $formattedDate'),
+                                    if (note != null && note.trim().isNotEmpty)
+                                      Text('Note: $note'),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -791,6 +1023,18 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     final int? parsed = int.tryParse(trimmed);
     if (parsed == null || parsed < 0) {
       return '$fieldLabel must be zero or a positive integer';
+    }
+    return null;
+  }
+
+  String? _validateRequiredPositiveInt(String? value, String fieldLabel) {
+    final String trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '$fieldLabel is required';
+    }
+    final int? parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return '$fieldLabel must be a positive integer';
     }
     return null;
   }

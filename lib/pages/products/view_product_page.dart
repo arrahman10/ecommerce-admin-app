@@ -27,6 +27,8 @@ class _ViewProductPageState extends State<ViewProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Products')),
       body: Consumer<ProductProvider>(
@@ -38,43 +40,83 @@ class _ViewProductPageState extends State<ViewProductPage> {
                 return const Center(child: Text('No products found'));
               }
 
-              return ListView.builder(
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
                 itemCount: products.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (BuildContext context, int index) {
                   final Product product = products[index];
                   final double finalPrice = calculateFinalPrice(product);
 
-                  return ListTile(
-                    leading: _buildThumbnail(product),
-                    title: Text(product.name),
-                    subtitle: Text('Stock: ${product.stock}'),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: <Widget>[
-                        if (product.discount > 0)
-                          Text(
-                            '৳${product.salePrice.toStringAsFixed(0)}',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  decoration: TextDecoration.lineThrough,
-                                ),
-                          )
-                        else
-                          const SizedBox(height: 4),
-                        Text(
-                          '৳${finalPrice.toStringAsFixed(0)}',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                  return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onTap: () {
-                      context.pushNamed(
-                        ProductDetailsPage.routeName,
-                        extra: product,
-                      );
-                    },
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        context.pushNamed(
+                          ProductDetailsPage.routeName,
+                          extra: product,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: <Widget>[
+                            _buildThumbnail(context, product),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    product.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Stock: ${product.stock}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.textTheme.bodySmall?.color
+                                          ?.withOpacity(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                if (product.discount > 0)
+                                  Text(
+                                    '৳${product.salePrice.toStringAsFixed(0)}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                if (product.discount > 0)
+                                  const SizedBox(height: 2),
+                                Text(
+                                  '৳${finalPrice.toStringAsFixed(0)}',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   );
                 },
               );
@@ -83,10 +125,12 @@ class _ViewProductPageState extends State<ViewProductPage> {
     );
   }
 
-  Widget _buildThumbnail(Product product) {
+  Widget _buildThumbnail(BuildContext context, Product product) {
+    final ThemeData theme = Theme.of(context);
+
     if (product.thumbnailUrl != null && product.thumbnailUrl!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(12),
         child: Image.network(
           product.thumbnailUrl!,
           width: 56,
@@ -96,6 +140,19 @@ class _ViewProductPageState extends State<ViewProductPage> {
       );
     }
 
-    return const Icon(Icons.image, size: 40);
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image_outlined,
+        color: theme.colorScheme.primary,
+        size: 28,
+      ),
+    );
   }
 }

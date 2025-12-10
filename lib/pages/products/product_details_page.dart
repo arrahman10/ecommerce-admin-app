@@ -55,7 +55,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _buildMainImage(product),
+            _buildMainImage(context, product),
             const SizedBox(height: 16),
             _buildAdditionalImagesSection(context, product),
             const SizedBox(height: 12),
@@ -78,20 +78,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   // ---------- Header Image ----------
 
-  Widget _buildMainImage(Product product) {
+  Widget _buildMainImage(BuildContext context, Product product) {
     final String? imageUrl = product.imageUrl?.isNotEmpty == true
         ? product.imageUrl
         : product.thumbnailUrl;
 
     if (imageUrl != null && imageUrl.isNotEmpty) {
-      return Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            imageUrl,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.cover,
+      return GestureDetector(
+        onTap: () => _showMainImagePreviewDialog(context, imageUrl),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              imageUrl,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       );
@@ -106,6 +109,33 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ),
       alignment: Alignment.center,
       child: Icon(Icons.image, size: 64, color: Colors.grey.shade500),
+    );
+  }
+
+  Future<void> _showMainImagePreviewDialog(
+    BuildContext context,
+    String imageUrl,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              color: Colors.black,
+              child: InteractiveViewer(
+                child: Center(
+                  child: Image.network(imageUrl, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -191,41 +221,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               doc.data(),
                             );
 
-                            return Stack(
-                              children: <Widget>[
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    image.downloadUrl,
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                  ),
+                            return GestureDetector(
+                              onTap: () => _showAdditionalImagePreviewDialog(
+                                context: context,
+                                imageDocId: doc.id,
+                                image: image,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  image.downloadUrl,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
                                 ),
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: InkWell(
-                                    onTap: () => _confirmDeleteAdditionalImage(
-                                      context: context,
-                                      imageDocId: doc.id,
-                                      image: image,
-                                    ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.black54,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      padding: const EdgeInsets.all(4),
-                                      child: const Icon(
-                                        Icons.close,
-                                        size: 16,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             );
                           },
                         ),
@@ -238,15 +248,84 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  Future<void> _showAdditionalImagePreviewDialog({
+    required BuildContext context,
+    required String imageDocId,
+    required ImageModel image,
+  }) async {
+    final bool? shouldDelete = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
+          child: Stack(
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  color: Colors.black,
+                  child: InteractiveViewer(
+                    child: Center(
+                      child: Image.network(
+                        image.downloadUrl,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                left: 8,
+                child: IconButton(
+                  onPressed: () => Navigator.pop<bool>(dialogContext, false),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  onPressed: () => Navigator.pop<bool>(dialogContext, true),
+                  icon: const Icon(Icons.delete_outline, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (shouldDelete == true) {
+      if (!mounted) return;
+      await _confirmDeleteAdditionalImage(
+        context: context,
+        imageDocId: imageDocId,
+        image: image,
+      );
+    }
+  }
+
   // ---------- Re-purchase / Purchase history buttons ----------
 
   Widget _buildPrimaryActionsRow(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Row(
       children: <Widget>[
         Expanded(
           child: OutlinedButton(
             onPressed: () => _showRepurchaseDialog(context),
-
+            style: OutlinedButton.styleFrom(
+              foregroundColor: theme.colorScheme.primary,
+              side: BorderSide(color: theme.colorScheme.primary),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text('Re-purchase'),
           ),
         ),
@@ -254,7 +333,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         Expanded(
           child: OutlinedButton(
             onPressed: () => _showPurchaseHistoryBottomSheet(context),
-
+            style: OutlinedButton.styleFrom(
+              foregroundColor: theme.colorScheme.primary,
+              side: BorderSide(
+                color: theme.colorScheme.primary.withOpacity(0.7),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text('Purchase history'),
           ),
         ),
@@ -506,64 +594,79 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   // ---------- Basic info (name, category, brand) ----------
 
   Widget _buildBasicInfoSection(BuildContext context, Product product) {
+    final ThemeData theme = Theme.of(context);
+    final double finalPrice = calculateFinalPrice(product);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  product.name,
-                  style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      product.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${product.categoryName} • ${product.brandName}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                          0.8,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  product.categoryName,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                Text(
-                  product.brandName,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (product.shortDescription != null &&
-                    product.shortDescription!.trim().isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 8),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  if (product.discount > 0)
+                    Text(
+                      '৳${product.salePrice.toStringAsFixed(0)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 4),
                   Text(
-                    product.shortDescription!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    '৳${finalPrice.toStringAsFixed(0)}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              if (product.discount > 0)
-                Text(
-                  '৳${product.salePrice.toStringAsFixed(0)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                )
-              else
-                const SizedBox(height: 4),
-              Text(
-                '৳${calculateFinalPrice(product).toStringAsFixed(0)}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          _buildShortDescriptionPreview(context, product),
         ],
       ),
+    );
+  }
+
+  Widget _buildShortDescriptionPreview(BuildContext context, Product product) {
+    final ThemeData theme = Theme.of(context);
+    final String? short = product.shortDescription?.trim();
+    final String text = (short == null || short.isEmpty) ? '---' : short;
+
+    return Text(
+      text,
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodyMedium,
     );
   }
 
@@ -792,30 +895,36 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   // this section shows description preview and triggers the full view/edit dialog
   Widget _buildDescriptionSection(BuildContext context, Product product) {
+    final ThemeData theme = Theme.of(context);
     final String longText = product.longDescription?.trim() ?? '';
     final String shortText = product.shortDescription?.trim() ?? '';
 
-    // prefer longDescription, then shortDescription, otherwise show fallback text
     final String description = longText.isNotEmpty
         ? longText
-        : (shortText.isNotEmpty ? shortText : 'No description added');
+        : (shortText.isNotEmpty ? shortText : 'No description added yet');
+
+    final String actionLabel = longText.isEmpty
+        ? 'Add or edit description'
+        : 'View or edit description';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Description', style: Theme.of(context).textTheme.titleMedium),
+        Text('Description', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
           ),
           child: Text(
             description,
             maxLines: 5,
             overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium,
           ),
         ),
         const SizedBox(height: 4),
@@ -823,7 +932,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: () => _showDescriptionDialog(context, product),
-            child: const Text('Show full description'),
+            child: Text(actionLabel),
           ),
         ),
       ],
@@ -901,50 +1010,69 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   // Product availability (Available / Featured) section
   Widget _buildAvailabilitySection(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final ThemeData theme = Theme.of(context);
+
+    BoxDecoration _tileDecoration() {
+      return BoxDecoration(
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
+    }
+
+    Widget _buildAvailabilityTile({
+      required String label,
+      required bool value,
+      required ValueChanged<bool> onChanged,
+    }) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: _tileDecoration(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(
-              'Availability',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Available'),
-              value: _product.available,
-              onChanged: (bool value) {
-                _updateAvailabilityAndFeatured(
-                  context: context,
-                  available: value,
-                  featured: _product.featured,
-                );
-              },
-            ),
-            const SizedBox(height: 4),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Featured'),
-              value: _product.featured,
-              onChanged: (bool value) {
-                _updateAvailabilityAndFeatured(
-                  context: context,
-                  available: _product.available,
-                  featured: value,
-                );
-              },
-            ),
+            Text(label, style: theme.textTheme.bodyMedium),
+            Switch(value: value, onChanged: onChanged),
           ],
         ),
-      ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text('Availability', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        _buildAvailabilityTile(
+          label: 'Available',
+          value: _product.available,
+          onChanged: (bool value) {
+            _updateAvailabilityAndFeatured(
+              context: context,
+              available: value,
+              featured: _product.featured,
+            );
+          },
+        ),
+        _buildAvailabilityTile(
+          label: 'Featured',
+          value: _product.featured,
+          onChanged: (bool value) {
+            _updateAvailabilityAndFeatured(
+              context: context,
+              available: _product.available,
+              featured: value,
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -983,18 +1111,33 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   // ---------- Notify users button (placeholder) ----------
 
   Widget _buildNotifyUsersButton(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          // future: add real notify users logic (e.g. send push or email)
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Notify users feature will be implemented later.'),
             ),
           );
         },
-        child: const Text('Notify users'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          'Notify users',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.onPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

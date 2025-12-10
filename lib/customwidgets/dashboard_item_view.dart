@@ -14,23 +14,33 @@ class DashboardItemView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return InkWell(
-      onTap: () => onTap(model.routeName),
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        if (model.routeName.isNotEmpty) {
+          onTap(model.routeName);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This section will be added later.')),
+          );
+        }
+      },
       child: Card(
         elevation: 2,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Icon(model.iconData, size: 40),
-              const SizedBox(height: 8),
-              Text(
-                model.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(model.iconData, size: 50, color: theme.colorScheme.primary),
+            const SizedBox(height: 10),
+            Text(
+              model.title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge,
+            ),
+          ],
         ),
       ),
     );

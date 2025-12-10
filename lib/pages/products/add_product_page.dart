@@ -115,18 +115,24 @@ class _AddProductPageState extends State<AddProductPage> {
 
   // Image section
   Widget _buildImageSection(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Product image', style: Theme.of(context).textTheme.titleMedium),
+        Text('Product image', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         InkWell(
           onTap: _pickImageFromGallery,
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            height: 150,
+            height: 160,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8.0),
+              color: theme.colorScheme.surface,
+              border: Border.all(
+                color: theme.colorScheme.outline.withOpacity(0.4),
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
             child: _pickedImageFile == null
@@ -134,17 +140,21 @@ class _AddProductPageState extends State<AddProductPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      const Icon(Icons.image, size: 40, color: Colors.grey),
+                      Icon(
+                        Icons.image_outlined,
+                        size: 40,
+                        color: theme.colorScheme.outline,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'No image selected\nUse the buttons below to add image',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   )
                 : ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.file(
                       File(_pickedImageFile!.path),
                       fit: BoxFit.cover,
@@ -159,6 +169,12 @@ class _AddProductPageState extends State<AddProductPage> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickImageFromCamera,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 icon: const Icon(Icons.photo_camera),
                 label: const Text('Capture'),
               ),
@@ -167,6 +183,12 @@ class _AddProductPageState extends State<AddProductPage> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickImageFromGallery,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 icon: const Icon(Icons.photo_library),
                 label: const Text('Gallery'),
               ),
@@ -178,6 +200,12 @@ class _AddProductPageState extends State<AddProductPage> {
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             onPressed: _pickPurchaseDate,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             icon: const Icon(Icons.date_range),
             label: Text(
               _selectedPurchaseDate == null
@@ -244,16 +272,27 @@ class _AddProductPageState extends State<AddProductPage> {
     final List<Category> categories = categoryProvider.categoryList;
     final List<Brand> brands = brandProvider.brandList;
 
+    final ThemeData theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Category & Brand',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('Category & Brand', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: theme.colorScheme.outline.withOpacity(
+                _selectedCategory != null ? 0.6 : 0.3,
+              ),
+            ),
+          ),
           child: ListTile(
+            leading: Icon(
+              Icons.category_outlined,
+              color: theme.colorScheme.primary,
+            ),
             title: const Text('Category'),
             subtitle: Text(
               _selectedCategory != null
@@ -262,13 +301,27 @@ class _AddProductPageState extends State<AddProductPage> {
                         ? 'No category available'
                         : 'Tap to select category'),
             ),
+            trailing: const Icon(Icons.chevron_right),
             onTap: categories.isEmpty
                 ? null
                 : () => _showCategorySelectionDialog(context, categories),
           ),
         ),
+        const SizedBox(height: 8),
         Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: theme.colorScheme.outline.withOpacity(
+                _selectedBrand != null ? 0.6 : 0.3,
+              ),
+            ),
+          ),
           child: ListTile(
+            leading: Icon(
+              Icons.grade,
+              color: theme.colorScheme.primary,
+            ),
             title: const Text('Brand'),
             subtitle: Text(
               _selectedBrand != null
@@ -277,6 +330,7 @@ class _AddProductPageState extends State<AddProductPage> {
                         ? 'No brand available'
                         : 'Tap to select brand'),
             ),
+            trailing: const Icon(Icons.chevron_right),
             onTap: brands.isEmpty
                 ? null
                 : () => _showBrandSelectionDialog(context, brands),
@@ -290,19 +344,95 @@ class _AddProductPageState extends State<AddProductPage> {
     BuildContext context,
     List<Category> categories,
   ) async {
+    final ThemeData theme = Theme.of(context);
+
     final Category? selected = await showDialog<Category>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return SimpleDialog(
-          title: const Text('Select category'),
-          children: <Widget>[
-            for (final Category category in categories)
-              SimpleDialogOption(
-                onPressed: () =>
-                    Navigator.pop<Category>(dialogContext, category),
-                child: Text(category.name),
-              ),
-          ],
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Select category',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: categories.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (BuildContext context, int index) {
+                final Category category = categories[index];
+                final bool isSelected = _selectedCategory?.id == category.id;
+
+                final int productCount = category.productCount;
+                final String subtitleText = productCount > 0
+                    ? '$productCount products'
+                    : 'No products yet';
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.pop<Category>(dialogContext, category),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primary.withOpacity(0.06)
+                          : theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.dividerColor.withOpacity(0.6),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.category_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                category.name,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitleText,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
     );
@@ -318,18 +448,95 @@ class _AddProductPageState extends State<AddProductPage> {
     BuildContext context,
     List<Brand> brands,
   ) async {
+    final ThemeData theme = Theme.of(context);
+
     final Brand? selected = await showDialog<Brand>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return SimpleDialog(
-          title: const Text('Select brand'),
-          children: <Widget>[
-            for (final Brand brand in brands)
-              SimpleDialogOption(
-                onPressed: () => Navigator.pop<Brand>(dialogContext, brand),
-                child: Text(brand.name),
-              ),
-          ],
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Select brand',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: brands.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (BuildContext context, int index) {
+                final Brand brand = brands[index];
+                final bool isSelected = _selectedBrand?.id == brand.id;
+
+                final int productCount = brand.productCount;
+                final String subtitleText = productCount > 0
+                    ? '$productCount products'
+                    : 'No products yet';
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.pop<Brand>(dialogContext, brand),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primary.withOpacity(0.06)
+                          : theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.dividerColor.withOpacity(0.6),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.grade, // Default brand icon (future-ready)
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                brand.name,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitleText,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
     );
@@ -353,10 +560,7 @@ class _AddProductPageState extends State<AddProductPage> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'Product name',
-            border: OutlineInputBorder(),
-          ),
+          decoration: _roundedInputDecoration(context, 'Product name'),
           textInputAction: TextInputAction.next,
           validator: (String? value) {
             if (value == null || value.trim().isEmpty) {
@@ -368,20 +572,14 @@ class _AddProductPageState extends State<AddProductPage> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _shortDescriptionController,
-          decoration: const InputDecoration(
-            labelText: 'Short description',
-            border: OutlineInputBorder(),
-          ),
+          decoration: _roundedInputDecoration(context, 'Short description'),
           textInputAction: TextInputAction.next,
           maxLines: 2,
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _longDescriptionController,
-          decoration: const InputDecoration(
-            labelText: 'Long description',
-            border: OutlineInputBorder(),
-          ),
+          decoration: _roundedInputDecoration(context, 'Long description'),
           maxLines: 4,
         ),
       ],
@@ -403,10 +601,21 @@ class _AddProductPageState extends State<AddProductPage> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Purchase price',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Purchase price')
+                    .copyWith(
+                      border: _roundedInputDecoration(
+                        context,
+                        'Purchase price',
+                      ).border,
+                      enabledBorder: _roundedInputDecoration(
+                        context,
+                        'Purchase price',
+                      ).enabledBorder,
+                      focusedBorder: _roundedInputDecoration(
+                        context,
+                        'Purchase price',
+                      ).focusedBorder,
+                    ),
                 textInputAction: TextInputAction.next,
                 validator: (String? value) =>
                     _validateRequiredDouble(value, 'Purchase price'),
@@ -419,10 +628,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Sale price',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: _roundedInputDecoration(context, 'Sale price'),
                 textInputAction: TextInputAction.next,
                 validator: (String? value) =>
                     _validateRequiredDouble(value, 'Sale price'),
@@ -447,9 +653,9 @@ class _AddProductPageState extends State<AddProductPage> {
               child: TextFormField(
                 controller: _stockController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity in stock',
-                  border: OutlineInputBorder(),
+                decoration: _roundedInputDecoration(
+                  context,
+                  'Quantity in stock',
                 ),
                 textInputAction: TextInputAction.done,
                 validator: (String? value) =>
@@ -463,10 +669,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Discount (%)',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: _roundedInputDecoration(context, 'Discount (%)'),
               ),
             ),
           ],
@@ -477,11 +680,51 @@ class _AddProductPageState extends State<AddProductPage> {
 
   // Submit button
   Widget _buildSubmitButton(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _isSaving ? null : _handleSubmit,
-        child: Text(_isSaving ? 'Saving...' : 'Save product'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          _isSaving ? 'Saving...' : 'Save product',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.onPrimary, // এখানেই সাদা (onPrimary) সেট
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+      ),
+    );
+  }
+
+  // Common rounded input decoration (radius = 12)
+  InputDecoration _roundedInputDecoration(
+    BuildContext context,
+    String labelText,
+  ) {
+    final ThemeData theme = Theme.of(context);
+
+    return InputDecoration(
+      labelText: labelText,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outline.withOpacity(0.5),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.3),
       ),
     );
   }

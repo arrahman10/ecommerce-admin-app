@@ -43,23 +43,27 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+      body: Container(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        child: GridView.builder(
+          padding: const EdgeInsets.fromLTRB(5, 5, 5, 5),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.0,
+            mainAxisSpacing: 2,
+            crossAxisSpacing: 2,
+          ),
+          itemCount: dashboardModelList.length,
+          itemBuilder: (BuildContext context, int index) {
+            final DashboardModel model = dashboardModelList[index];
+            return DashboardItemView(
+              model: model,
+              onTap: (String routeName) {
+                context.goNamed(routeName);
+              },
+            );
+          },
         ),
-        itemCount: dashboardModelList.length,
-        itemBuilder: (BuildContext context, int index) {
-          final DashboardModel model = dashboardModelList[index];
-          return DashboardItemView(
-            model: model,
-            onTap: (String routeName) {
-              context.goNamed(routeName);
-            },
-          );
-        },
       ),
     );
   }

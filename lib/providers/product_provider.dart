@@ -17,6 +17,7 @@ class ProductProvider with ChangeNotifier {
 
   final List<Product> _productList = <Product>[];
   bool _isListening = false;
+  bool _isLoading = false;
 
   /// Exposes an unmodifiable view of the in-memory product list so that
   /// outside widgets cannot mutate it directly.
@@ -29,32 +30,42 @@ class ProductProvider with ChangeNotifier {
   ///
   /// The listener is attached only once per provider instance, guarded by
   /// the [_isListening] flag.
+  /// Whether the initial product stream is currently loading.
+  bool get isLoading => _isLoading;
+
+  /// Load all products from Firestore ordered by latest createdAt.
   void getAllProducts() {
-    if (_isListening) {
-      return;
-    }
+    if (_isListening) return;
     _isListening = true;
 
-    DbHelper.getAllProducts().listen((
-      QuerySnapshot<Map<String, dynamic>> snapshot,
-    ) {
-      final List<Product> products = snapshot.docs
-          .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-            final Map<String, dynamic> data = doc.data();
+    _isLoading = true;
+    notifyListeners();
 
-            // Ensure Firestore document id is reflected in the model as well.
-            data[productFieldId] = doc.id;
+    DbHelper.getAllProducts().listen(
+      (QuerySnapshot<Map<String, dynamic>> snapshot) {
+        final List<Product> products = snapshot.docs
+            .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+              final Map<String, dynamic> data = doc.data();
 
-            return Product.fromJson(data);
-          })
-          .toList(growable: false);
+              // Ensure Firestore document id is reflected in the model as well.
+              data[productFieldId] = doc.id;
 
-      _productList
-        ..clear()
-        ..addAll(products);
+              return Product.fromJson(data);
+            })
+            .toList(growable: false);
 
-      notifyListeners();
-    });
+        _productList
+          ..clear()
+          ..addAll(products);
+
+        _isLoading = false;
+        notifyListeners();
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
   }
 
   // ================== Description updates ==================

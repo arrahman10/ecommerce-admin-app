@@ -24,16 +24,11 @@ class ViewProductPage extends StatefulWidget {
 class _ViewProductPageState extends State<ViewProductPage> {
   // ================== Lifecycle ==================
 
-  /// Load products after the first frame is built.
-  ///
-  /// This ensures that the [BuildContext] is fully available when
-  /// accessing [ProductProvider].
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductProvider>().getAllProducts();
-    });
+    // Trigger initial products load using ProductProvider.
+    context.read<ProductProvider>().getAllProducts();
   }
 
   // ================== UI build ==================
@@ -47,7 +42,12 @@ class _ViewProductPageState extends State<ViewProductPage> {
       body: Consumer<ProductProvider>(
         builder:
             (BuildContext context, ProductProvider provider, Widget? child) {
+              final bool isLoading = provider.isLoading;
               final List<Product> products = provider.productList;
+
+              if (isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
               if (products.isEmpty) {
                 return const Center(child: Text('No products found'));
@@ -64,7 +64,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
                   return Card(
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
@@ -149,7 +149,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
 
     if (product.thumbnailUrl != null && product.thumbnailUrl!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        // borderRadius: BorderRadius.circular(12),
         child: Image.network(
           product.thumbnailUrl!,
           width: 56,

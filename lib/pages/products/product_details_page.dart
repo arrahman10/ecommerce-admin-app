@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -38,6 +39,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   /// or description can be reflected immediately without reloading the page.
   late Product _product;
 
+  /// Controls whether the description card is expanded (show full text)
+  /// or collapsed (show up to 5 lines).
+  bool _isDescriptionExpanded = false;
+
   /// Shared [ImagePicker] instance for capturing or selecting images.
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -67,24 +72,24 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             _buildMainImage(context, product),
-            const SizedBox(height: 16),
-            _buildAdditionalImagesSection(context, product),
             const SizedBox(height: 12),
+            _buildAdditionalImagesSection(context, product),
+            const SizedBox(height: 8),
             _buildPrimaryActionsRow(context),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             _buildBasicInfoSection(context, product),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildPriceAndStockSection(context, product),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildDescriptionSection(context, product),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildAvailabilitySection(context),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             _buildNotifyUsersButton(context),
           ],
         ),
@@ -97,8 +102,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   /// Build the main product image header.
   ///
   /// Uses [Product.imageUrl] or falls back to [Product.thumbnailUrl].
-  /// If no image is available, shows a placeholder container.
+  /// If no image is available, shows a tappable placeholder to add one.
   Widget _buildMainImage(BuildContext context, Product product) {
+    final ThemeData theme = Theme.of(context);
     final String? imageUrl = product.imageUrl?.isNotEmpty == true
         ? product.imageUrl
         : product.thumbnailUrl;
@@ -107,57 +113,275 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       return GestureDetector(
         onTap: () => _showMainImagePreviewDialog(context, imageUrl),
         child: Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                height: 325,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
       );
     }
 
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _showMainImageSourceSheet(context),
+      child: Container(
+        height: 350,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.primary.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              Icons.add_a_photo_outlined,
+              size: 40,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add product image',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
-      alignment: Alignment.center,
-      child: Icon(Icons.image, size: 64, color: Colors.grey.shade500),
     );
   }
 
   /// Show a full-screen-style preview dialog for the main image.
+  /// Top-left: close, top-right: delete.
   Future<void> _showMainImagePreviewDialog(
     BuildContext context,
     String imageUrl,
   ) async {
-    await showDialog<void>(
+    final bool? shouldDelete = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black87,
       builder: (BuildContext dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              color: Colors.black,
-              child: InteractiveViewer(
-                child: Center(
-                  child: Image.network(imageUrl, fit: BoxFit.contain),
+          child: Stack(
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  color: Colors.black,
+                  child: InteractiveViewer(
+                    child: Center(
+                      child: Image.network(imageUrl, fit: BoxFit.contain),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                top: 8,
+                left: 8,
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.black54,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop<bool>(dialogContext, false),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.redAccent,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop<bool>(dialogContext, true),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.delete_outline, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
+
+    if (shouldDelete == true) {
+      if (!mounted) return;
+      await _confirmDeleteMainImage(context);
+    }
+  }
+
+  /// Bottom sheet to choose camera or gallery for the main product image.
+  Future<void> _showMainImageSourceSheet(BuildContext parentContext) async {
+    await showModalBottomSheet<void>(
+      context: parentContext,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Capture image'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickMainImage(parentContext, ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickMainImage(parentContext, ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Pick a main image and upload/update it for the product.
+  Future<void> _pickMainImage(BuildContext context, ImageSource source) async {
+    final XFile? picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 80,
+    );
+
+    if (picked == null) {
+      return;
+    }
+
+    final String? productId = _product.id;
+    if (productId == null || productId.isEmpty) {
+      showMsg(context, 'Cannot update image: product id is missing');
+      return;
+    }
+
+    try {
+      EasyLoading.show(status: 'Updating image...');
+
+      // Delete old main image file from Storage if any exists.
+      if ((_product.imageUrl != null && _product.imageUrl!.isNotEmpty) ||
+          (_product.thumbnailUrl != null &&
+              _product.thumbnailUrl!.isNotEmpty)) {
+        await DbHelper.deleteMainProductImageForProduct(_product);
+      }
+
+      // Upload new image.
+      final ImageModel image = await DbHelper.uploadProductImage(
+        File(picked.path),
+      );
+
+      // Update Firestore document with new image URLs.
+      await FirebaseFirestore.instance
+          .collection('Products')
+          .doc(productId)
+          .update(<String, Object?>{
+            'imageUrl': image.downloadUrl,
+            'thumbnailUrl': image.downloadUrl,
+          });
+
+      if (!mounted) return;
+
+      setState(() {
+        _product = _product.copyWith(
+          imageUrl: image.downloadUrl,
+          thumbnailUrl: image.downloadUrl,
+        );
+      });
+
+      showMsg(context, 'Product image updated');
+    } catch (e) {
+      if (!mounted) return;
+      showMsg(context, 'Failed to update product image: $e');
+    } finally {
+      EasyLoading.dismiss();
+    }
+  }
+
+  /// Confirm and delete the main product image, then fall back to placeholder.
+  Future<void> _confirmDeleteMainImage(BuildContext context) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Remove product image'),
+          content: const Text(
+            'Are you sure you want to remove the main product image?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop<bool>(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop<bool>(dialogContext, true),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    if (!mounted) return;
+
+    final String? productId = _product.id;
+    if (productId == null || productId.isEmpty) {
+      showMsg(context, 'Cannot remove image: product id is missing');
+      return;
+    }
+
+    try {
+      EasyLoading.show(status: 'Removing image...');
+
+      // Delete existing main image file from Storage.
+      await DbHelper.deleteMainProductImageForProduct(_product);
+
+      // Clear image URLs on the product document.
+      await FirebaseFirestore.instance
+          .collection('Products')
+          .doc(productId)
+          .update(<String, Object?>{'imageUrl': null, 'thumbnailUrl': null});
+
+      setState(() {
+        _product = _product.copyWith(imageUrl: null, thumbnailUrl: null);
+      });
+
+      showMsg(context, 'Product image removed. You can add a new image.');
+    } catch (e) {
+      showMsg(context, 'Failed to remove product image: $e');
+    } finally {
+      EasyLoading.dismiss();
+    }
   }
 
   // ================== Additional images ==================
@@ -301,17 +525,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               Positioned(
                 top: 8,
                 left: 8,
-                child: IconButton(
+                child: _buildOverlayIconButton(
+                  context: dialogContext,
+                  icon: Icons.close,
+                  backgroundColor: Colors.black54,
+                  iconColor: Colors.white,
                   onPressed: () => Navigator.pop<bool>(dialogContext, false),
-                  icon: const Icon(Icons.close, color: Colors.white),
                 ),
               ),
               Positioned(
                 top: 8,
                 right: 8,
-                child: IconButton(
+                child: _buildOverlayIconButton(
+                  context: dialogContext,
+                  icon: Icons.delete_outline,
+                  backgroundColor: Colors.redAccent,
+                  iconColor: Colors.white,
                   onPressed: () => Navigator.pop<bool>(dialogContext, true),
-                  icon: const Icon(Icons.delete_outline, color: Colors.white),
                 ),
               ),
             ],
@@ -330,50 +560,88 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
+  /// Reusable overlay icon button for image preview (close/delete).
+  Widget _buildOverlayIconButton({
+    required BuildContext context,
+    required IconData icon,
+    required Color backgroundColor,
+    required Color iconColor,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+      ),
+    );
+  }
+
   // ================== Primary actions (re-purchase / history) ==================
 
   /// Build the row with "Re-purchase" and "Purchase history" actions.
+  /// Build the row with "Re-purchase" and "Purchase history" actions.
+  ///
+  /// Styled as two equally sized buttons with subtle elevation, so that
+  /// it feels like a primary action block for this screen.
   Widget _buildPrimaryActionsRow(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => _showRepurchaseDialog(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.primary,
-              side: BorderSide(color: theme.colorScheme.primary),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () => _showRepurchaseDialog(context),
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.06),
+                foregroundColor: theme.colorScheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
+              icon: const Icon(Icons.shopping_cart_outlined),
+              label: const Text('Re-purchase'),
             ),
-            child: const Text('Re-purchase'),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => _showPurchaseHistoryBottomSheet(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.primary,
-              side: BorderSide(
-                color: theme.colorScheme.primary.withOpacity(0.7),
+          const SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => _showPurchaseHistoryBottomSheet(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(
+                  color: theme.colorScheme.primary.withOpacity(0.7),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              icon: const Icon(Icons.history),
+              label: const Text('Purchase history'),
             ),
-            child: const Text('Purchase history'),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   /// Dialog to handle re-purchase flow (quantity, price, optional note).
+  ///
+  /// The quantity and purchase price inputs are styled inside a single
+  /// rounded card, similar to modern login forms.
   Future<void> _showRepurchaseDialog(BuildContext context) async {
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -388,6 +656,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     final bool? shouldSave = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
+        final ThemeData theme = Theme.of(dialogContext);
+
         return AlertDialog(
           title: const Text('Re-purchase product'),
           content: Form(
@@ -396,44 +666,93 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  TextFormField(
-                    controller: quantityController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Quantity to purchase',
-                    ),
-                    validator: (String? value) => _validateRequiredPositiveInt(
-                      value,
-                      'Quantity to purchase',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: purchasePriceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Purchase price (per unit)',
-                    ),
-                    validator: (String? value) =>
-                        _validateRequiredPositiveDouble(
-                          value,
-                          'Purchase price',
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          child: TextFormField(
+                            controller: quantityController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              labelText: 'Quantity to purchase',
+                              prefixIcon: Icon(Icons.shopping_cart_outlined),
+                            ),
+                            validator: (String? value) =>
+                                _validateRequiredPositiveInt(
+                                  value,
+                                  'Quantity to purchase',
+                                ),
+                          ),
+                        ),
+
+                        // Divider(
+                        //   height: 1,
+                        //   color: theme.dividerColor.withOpacity(0.4),
+                        // ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 56),
+                          child: Divider(
+                            height: 1,
+                            color: theme.dividerColor.withOpacity(0.4),
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          child: TextFormField(
+                            controller: purchasePriceController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              labelText: 'Purchase price (per unit)',
+                              prefixIcon: Icon(Icons.attach_money_outlined),
+                            ),
+                            validator: (String? value) =>
+                                _validateRequiredPositiveDouble(
+                                  value,
+                                  'Purchase price',
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: noteController,
                     maxLines: 2,
                     decoration: const InputDecoration(
                       labelText: 'Note (optional)',
+                      prefixIcon: Icon(Icons.note_alt_outlined),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
@@ -556,9 +875,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           }
 
                           return ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                             itemCount: docs.length,
                             separatorBuilder: (_, __) =>
-                                const Divider(height: 1),
+                                const SizedBox(height: 8),
                             itemBuilder: (BuildContext context, int index) {
                               final Map<String, dynamic> data = docs[index]
                                   .data();
@@ -585,20 +905,77 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                               final double totalCost = quantity * purchasePrice;
 
-                              return ListTile(
-                                title: Text(
-                                  '$quantity pcs × ৳${purchasePrice.toStringAsFixed(2)}',
+                              return Card(
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: Theme.of(
+                                      context,
+                                    ).dividerColor.withOpacity(0.3),
+                                  ),
                                 ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(
-                                      'Total: ৳${totalCost.toStringAsFixed(2)}',
-                                    ),
-                                    Text('Date: $formattedDate'),
-                                    if (note != null && note.trim().isNotEmpty)
-                                      Text('Note: $note'),
-                                  ],
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 4),
+                                        child: Icon(Icons.history, size: 20),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              '$quantity pcs × ৳${purchasePrice.toStringAsFixed(2)}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Total: ৳${totalCost.toStringAsFixed(2)}',
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall,
+                                            ),
+                                            Text(
+                                              'Date: $formattedDate',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.color
+                                                        ?.withOpacity(0.7),
+                                                  ),
+                                            ),
+                                            if (note != null &&
+                                                note.trim().isNotEmpty)
+                                              Text(
+                                                'Note: $note',
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
@@ -622,7 +999,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     final double finalPrice = calculateFinalPrice(product);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -761,10 +1138,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     BuildContext context,
     Product product,
   ) async {
-    // Separate form key for validation.
+    final ThemeData theme = Theme.of(context);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     // Prefill current values into the text fields.
+
     final TextEditingController purchasePriceController = TextEditingController(
       text: _product.purchasePrice.toStringAsFixed(0),
     );
@@ -778,65 +1156,111 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       text: _product.stock.toString(),
     );
 
+    Widget _buildDialogField({
+      required IconData icon,
+      required String label,
+      required TextEditingController controller,
+      required TextInputType keyboardType,
+      String? Function(String?)? validator,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            labelText: label,
+            prefixIcon: Icon(icon),
+          ),
+        ),
+      );
+    }
+
     final bool? shouldSave = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Edit pricing & stock'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Edit pricing & stock',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
           content: Form(
             key: formKey,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  TextFormField(
-                    controller: purchasePriceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Purchase price',
-                    ),
-                    validator: (String? value) =>
-                        _validateRequiredPositiveDouble(
-                          value,
-                          'Purchase price',
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        _buildDialogField(
+                          icon: Icons.shopping_bag_outlined,
+                          label: 'Purchase price',
+                          controller: purchasePriceController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (String? value) =>
+                              _validateRequiredPositiveDouble(
+                                value,
+                                'Purchase price',
+                              ),
                         ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: salePriceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(labelText: 'Sale price'),
-                    validator: (String? value) =>
-                        _validateRequiredPositiveDouble(value, 'Sale price'),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: discountController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Discount (%)',
-                    ),
-                    validator: (String? value) =>
-                        _validateRequiredNonNegativeDouble(value, 'Discount'),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: stockController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Quantity in stock',
-                    ),
-                    validator: (String? value) =>
-                        _validateRequiredNonNegativeInt(
-                          value,
-                          'Quantity in stock',
+                        const Divider(height: 1, indent: 56),
+                        _buildDialogField(
+                          icon: Icons.sell_outlined,
+                          label: 'Sale price',
+                          controller: salePriceController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (String? value) =>
+                              _validateRequiredPositiveDouble(
+                                value,
+                                'Sale price',
+                              ),
                         ),
+                        const Divider(height: 1, indent: 56),
+                        _buildDialogField(
+                          icon: Icons.percent,
+                          label: 'Discount (%)',
+                          controller: discountController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (String? value) =>
+                              _validateRequiredNonNegativeDouble(
+                                value,
+                                'Discount',
+                              ),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _buildDialogField(
+                          icon: Icons.inventory_2_outlined,
+                          label: 'Quantity in stock',
+                          controller: stockController,
+                          keyboardType: TextInputType.number,
+                          validator: (String? value) =>
+                              _validateRequiredNonNegativeInt(
+                                value,
+                                'Quantity in stock',
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -925,43 +1349,60 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     final String longText = product.longDescription?.trim() ?? '';
     final String shortText = product.shortDescription?.trim() ?? '';
 
-    final String description = longText.isNotEmpty
+    final String baseDescription = longText.isNotEmpty
         ? longText
         : (shortText.isNotEmpty ? shortText : 'No description added yet');
+    final bool hasDescription = baseDescription != 'No description added yet';
 
-    final String actionLabel = longText.isEmpty
-        ? 'Add or edit description'
-        : 'View or edit description';
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Description', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
+            ),
+            child: Text(
+              baseDescription,
+              maxLines: _isDescriptionExpanded ? null : 5,
+              overflow: _isDescriptionExpanded
+                  ? TextOverflow.visible
+                  : TextOverflow.ellipsis,
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text('Description', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
+              style: theme.textTheme.bodyMedium,
+            ),
           ),
-          child: Text(
-            description,
-            maxLines: 5,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium,
+          const SizedBox(height: 4),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              if (hasDescription)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isDescriptionExpanded = !_isDescriptionExpanded;
+                    });
+                  },
+                  child: Text(_isDescriptionExpanded ? 'See less' : 'See more'),
+                ),
+              TextButton(
+                onPressed: () => _showDescriptionDialog(context, product),
+                child: Text(
+                  hasDescription ? 'Edit description' : 'Add description',
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => _showDescriptionDialog(context, product),
-            child: Text(actionLabel),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -980,7 +1421,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text(product.name),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Edit description',
+            style: Theme.of(
+              dialogContext,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+
           content: SizedBox(
             width: double.infinity,
             child: TextField(
@@ -1016,20 +1466,25 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       return;
     }
 
-    // Update new description in Firestore and in the local product list.
-    await provider.updateProductDescription(
-      product: product,
-      longDescription: updatedText.isEmpty ? null : updatedText,
-    );
+    try {
+      EasyLoading.show(status: 'Saving description...');
 
-    // Also update the local product state so the updated description
-    // appears immediately in the UI.
-    if (mounted) {
-      setState(() {
-        _product = _product.copyWith(
-          longDescription: updatedText.isEmpty ? null : updatedText,
-        );
-      });
+      await provider.updateProductDescription(
+        product: product,
+        longDescription: updatedText.isEmpty ? null : updatedText,
+      );
+
+      if (mounted) {
+        setState(() {
+          _product = _product.copyWith(
+            longDescription: updatedText.isEmpty ? null : updatedText,
+          );
+        });
+      }
+
+      EasyLoading.showSuccess('Description updated');
+    } catch (e) {
+      EasyLoading.showError('Failed to update description');
     }
   }
 
@@ -1041,13 +1496,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     BoxDecoration _tileDecoration() {
       return BoxDecoration(
-        color: theme.cardColor,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       );
@@ -1072,34 +1528,37 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text('Availability', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        _buildAvailabilityTile(
-          label: 'Available',
-          value: _product.available,
-          onChanged: (bool value) {
-            _updateAvailabilityAndFeatured(
-              context: context,
-              available: value,
-              featured: _product.featured,
-            );
-          },
-        ),
-        _buildAvailabilityTile(
-          label: 'Featured',
-          value: _product.featured,
-          onChanged: (bool value) {
-            _updateAvailabilityAndFeatured(
-              context: context,
-              available: _product.available,
-              featured: value,
-            );
-          },
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Availability', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          _buildAvailabilityTile(
+            label: 'Available',
+            value: _product.available,
+            onChanged: (bool value) {
+              _updateAvailabilityAndFeatured(
+                context: context,
+                available: value,
+                featured: _product.featured,
+              );
+            },
+          ),
+          _buildAvailabilityTile(
+            label: 'Featured',
+            value: _product.featured,
+            onChanged: (bool value) {
+              _updateAvailabilityAndFeatured(
+                context: context,
+                available: _product.available,
+                featured: value,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -1278,15 +1737,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
 
     try {
+      EasyLoading.show(status: 'Uploading image...');
+
       await context.read<ProductProvider>().addAdditionalProductImage(
         product: _product,
         imageFile: File(picked.path),
       );
+
       if (!mounted) return;
       showMsg(context, 'Additional image added');
     } catch (e) {
       if (!mounted) return;
       showMsg(context, 'Failed to add additional image: $e');
+    } finally {
+      EasyLoading.dismiss();
     }
   }
 
@@ -1323,14 +1787,19 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     if (!mounted) return;
 
     try {
+      EasyLoading.show(status: 'Deleting image...');
+
       await context.read<ProductProvider>().deleteAdditionalProductImage(
         product: _product,
         imageDocId: imageDocId,
         image: image,
       );
+
       showMsg(context, 'Additional image deleted');
     } catch (e) {
       showMsg(context, 'Failed to delete additional image: $e');
+    } finally {
+      EasyLoading.dismiss();
     }
   }
 

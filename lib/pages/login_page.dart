@@ -1,12 +1,17 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecommerce_admin_app/auth/auth_service.dart';
 import 'package:ecommerce_admin_app/pages/dashboard_page.dart';
 
+/// Login page for admin users.
+///
+/// Provides an email/password form and uses [AuthService] to authenticate
+/// against Firebase Auth and the Admins collection.
 class LoginPage extends StatefulWidget {
+  /// Route name used with [GoRouter] navigation.
   static const String routeName = '/login';
 
   const LoginPage({super.key});
@@ -16,22 +21,40 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // ================== Form state & controllers ==================
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  /// Stores the latest authentication error message to show below the button.
   String _errMsg = '';
 
+  /// Whether the password field should hide the text.
   bool _obscurePassword = true;
+
+  /// Placeholder flag for future "remember me" behaviour.
   bool _rememberMe = false;
+
+  // ================== Lifecycle overrides ==================
 
   @override
   void initState() {
     super.initState();
     // Demo convenience: pre-fill admin credentials used in Firebase Auth.
+    // NOTE: This should be removed or replaced for production builds.
     _emailController.text = 'admin@gmail.com';
     _passwordController.text = '123456@Ar';
   }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // ================== UI build ==================
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +183,6 @@ class _LoginPageState extends State<LoginPage> {
                         return null;
                       },
                     ),
-
                     const SizedBox(height: 12),
 
                     // ---------- Remember me & Forgot password ----------
@@ -203,7 +225,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 24),
 
                     // ---------- Sign in button ----------
@@ -214,9 +235,7 @@ class _LoginPageState extends State<LoginPage> {
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              16,
-                            ), // max radius
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           backgroundColor: theme.colorScheme.primary,
                           foregroundColor: theme.colorScheme.onPrimary,
@@ -253,6 +272,12 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // ================== Authentication logic ==================
+
+  /// Validate the form and authenticate the admin using [AuthService].
+  ///
+  /// On success, navigates to [DashboardPage]. On failure, shows an error
+  /// message below the submit button.
   Future<void> _authenticate() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -268,11 +293,15 @@ class _LoginPageState extends State<LoginPage> {
       EasyLoading.dismiss();
 
       if (isAdmin) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         context.goNamed(DashboardPage.routeName);
       } else {
         await AuthService.logout();
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         setState(() {
           _errMsg = 'This is not an Admin account';
         });
@@ -288,12 +317,5 @@ class _LoginPageState extends State<LoginPage> {
         _errMsg = 'An unexpected error occurred. Please try again.';
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }

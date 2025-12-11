@@ -22,7 +22,11 @@ ImageModel _$ImageModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$ImageModel {
   String get downloadUrl => throw _privateConstructorUsedError;
+
+  /// Full Firebase Storage path where this image file is stored.
   String get storagePath => throw _privateConstructorUsedError;
+
+  /// Timestamp when the file was uploaded to storage (in UTC).
   @TimestampConverter()
   DateTime? get uploadedAt => throw _privateConstructorUsedError;
 
@@ -156,8 +160,12 @@ class _$ImageModelImpl implements _ImageModel {
 
   @override
   final String downloadUrl;
+
+  /// Full Firebase Storage path where this image file is stored.
   @override
   final String storagePath;
+
+  /// Timestamp when the file was uploaded to storage (in UTC).
   @override
   @TimestampConverter()
   final DateTime? uploadedAt;
@@ -211,8 +219,12 @@ abstract class _ImageModel implements ImageModel {
 
   @override
   String get downloadUrl;
+
+  /// Full Firebase Storage path where this image file is stored.
   @override
   String get storagePath;
+
+  /// Timestamp when the file was uploaded to storage (in UTC).
   @override
   @TimestampConverter()
   DateTime? get uploadedAt;

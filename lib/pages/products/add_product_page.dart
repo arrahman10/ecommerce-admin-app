@@ -14,7 +14,10 @@ import 'package:ecommerce_admin_app/providers/category_provider.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
 import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
+/// Page for adding a new product, including image, category/brand,
+/// basic information, pricing and inventory details.
 class AddProductPage extends StatefulWidget {
+  /// Route name used with [GoRouter] navigation.
   static const String routeName = 'add_product';
 
   const AddProductPage({super.key});
@@ -24,9 +27,11 @@ class AddProductPage extends StatefulWidget {
 }
 
 class _AddProductPageState extends State<AddProductPage> {
+  // ================== Form key & controllers ==================
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Controllers
+  // Text field controllers.
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _shortDescriptionController =
       TextEditingController();
@@ -38,14 +43,21 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _stockController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
 
+  // Category and brand selections.
   Category? _selectedCategory;
   Brand? _selectedBrand;
 
+  // Image and date pickers.
   final ImagePicker _picker = ImagePicker();
   XFile? _pickedImageFile;
   DateTime? _selectedPurchaseDate;
+
+  // Submission state.
   bool _isSaving = false;
 
+  // ================== Validators ==================
+
+  /// Validate a required double value from a text field.
   String? _validateRequiredDouble(String? value, String fieldLabel) {
     final String trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
@@ -58,6 +70,7 @@ class _AddProductPageState extends State<AddProductPage> {
     return null;
   }
 
+  /// Validate a required integer value from a text field.
   String? _validateRequiredInt(String? value, String fieldLabel) {
     final String trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
@@ -81,6 +94,8 @@ class _AddProductPageState extends State<AddProductPage> {
     _discountController.dispose();
     super.dispose();
   }
+
+  // ================== Scaffold & main layout ==================
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +128,9 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  // Image section
+  // ================== Image & purchase date section ==================
+
+  /// Build the section for choosing the main product image and purchase date.
   Widget _buildImageSection(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
@@ -218,14 +235,17 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
+  /// Pick an image using the device camera.
   void _pickImageFromCamera() {
     _pickImage(ImageSource.camera);
   }
 
+  /// Pick an image from the device gallery.
   void _pickImageFromGallery() {
     _pickImage(ImageSource.gallery);
   }
 
+  /// Generic helper to pick an image from the given [ImageSource].
   Future<void> _pickImage(ImageSource source) async {
     final XFile? picked = await _picker.pickImage(
       source: source,
@@ -241,6 +261,7 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
+  /// Show a date picker to select the purchase date.
   Future<void> _pickPurchaseDate() async {
     final DateTime now = DateTime.now();
     final DateTime? picked = await showDatePicker(
@@ -257,6 +278,7 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
+  /// Format a [DateTime] as dd/MM/yyyy for display.
   String _formatDate(DateTime date) {
     final String day = date.day.toString().padLeft(2, '0');
     final String month = date.month.toString().padLeft(2, '0');
@@ -264,7 +286,9 @@ class _AddProductPageState extends State<AddProductPage> {
     return '$day/$month/$year';
   }
 
-  // Category + Brand section
+  // ================== Category & brand section ==================
+
+  /// Build the section to select category and brand for the product.
   Widget _buildCategoryBrandSection(BuildContext context) {
     final CategoryProvider categoryProvider = context.watch<CategoryProvider>();
     final BrandProvider brandProvider = context.watch<BrandProvider>();
@@ -318,10 +342,7 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
           ),
           child: ListTile(
-            leading: Icon(
-              Icons.grade,
-              color: theme.colorScheme.primary,
-            ),
+            leading: Icon(Icons.grade, color: theme.colorScheme.primary),
             title: const Text('Brand'),
             subtitle: Text(
               _selectedBrand != null
@@ -340,6 +361,7 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
+  /// Show a dialog that allows the user to select a category.
   Future<void> _showCategorySelectionDialog(
     BuildContext context,
     List<Category> categories,
@@ -444,6 +466,7 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
+  /// Show a dialog that allows the user to select a brand.
   Future<void> _showBrandSelectionDialog(
     BuildContext context,
     List<Brand> brands,
@@ -504,7 +527,7 @@ class _AddProductPageState extends State<AddProductPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            Icons.grade, // Default brand icon (future-ready)
+                            Icons.grade, // Default brand icon (future-ready).
                             color: theme.colorScheme.primary,
                           ),
                         ),
@@ -548,15 +571,16 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-  // Basic info section
+  // ================== Basic information section ==================
+
+  /// Build the basic information section for product name and descriptions.
   Widget _buildBasicInfoSection(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Basic information',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('Basic information', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         TextFormField(
           controller: _nameController,
@@ -586,12 +610,16 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  // Pricing section
+  // ================== Pricing section ==================
+
+  /// Build the pricing section for purchase and sale prices.
   Widget _buildPricingSection(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Pricing', style: Theme.of(context).textTheme.titleMedium),
+        Text('Pricing', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Row(
           children: <Widget>[
@@ -601,21 +629,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(labelText: 'Purchase price')
-                    .copyWith(
-                      border: _roundedInputDecoration(
-                        context,
-                        'Purchase price',
-                      ).border,
-                      enabledBorder: _roundedInputDecoration(
-                        context,
-                        'Purchase price',
-                      ).enabledBorder,
-                      focusedBorder: _roundedInputDecoration(
-                        context,
-                        'Purchase price',
-                      ).focusedBorder,
-                    ),
+                decoration: _roundedInputDecoration(context, 'Purchase price'),
                 textInputAction: TextInputAction.next,
                 validator: (String? value) =>
                     _validateRequiredDouble(value, 'Purchase price'),
@@ -640,12 +654,16 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  // Inventory section
+  // ================== Inventory section ==================
+
+  /// Build the inventory section for stock quantity and discount.
   Widget _buildInventorySection(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Inventory', style: Theme.of(context).textTheme.titleMedium),
+        Text('Inventory', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Row(
           children: <Widget>[
@@ -678,7 +696,9 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  // Submit button
+  // ================== Submit button ==================
+
+  /// Build the submit button for saving the product.
   Widget _buildSubmitButton(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
@@ -697,16 +717,17 @@ class _AddProductPageState extends State<AddProductPage> {
         child: Text(
           _isSaving ? 'Saving...' : 'Save product',
           style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.onPrimary, // এখানেই সাদা (onPrimary) সেট
+            color: theme.colorScheme.onPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
-
       ),
     );
   }
 
-  // Common rounded input decoration (radius = 12)
+  // ================== Shared input decoration ==================
+
+  /// Common rounded input decoration with radius 12 for all text fields.
   InputDecoration _roundedInputDecoration(
     BuildContext context,
     String labelText,
@@ -729,6 +750,11 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
+  // ================== Form submission & reset helpers ==================
+
+  /// Validate the form, build the product payload and call the provider
+  /// to persist the product with its image. Shows loading and snackbars
+  /// for success/error states.
   Future<void> _handleSubmit() async {
     if (_pickedImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -777,23 +803,21 @@ class _AddProductPageState extends State<AddProductPage> {
     try {
       await productProvider.addProductWithImage(
         imageFile: File(_pickedImageFile!.path),
-
         purchaseDate: _selectedPurchaseDate,
-
         category: _selectedCategory!,
         brand: _selectedBrand!,
-
         name: _nameController.text,
         shortDescription: _shortDescriptionController.text,
         longDescription: _longDescriptionController.text,
-
         purchasePrice: purchasePrice,
         salePrice: salePrice,
         stock: stock,
         discount: discount,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       showMsg(context, 'Product added successfully');
 
@@ -801,7 +825,9 @@ class _AddProductPageState extends State<AddProductPage> {
 
       context.goNamed(DashboardPage.routeName);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       showMsg(context, 'Failed to save product: $e');
     } finally {
@@ -815,6 +841,7 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
+  /// Reset the form fields, selection state and image after a successful save.
   void _resetForm() {
     _formKey.currentState?.reset();
 

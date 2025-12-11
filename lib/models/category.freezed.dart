@@ -21,11 +21,17 @@ Category _$CategoryFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Category {
+  @JsonKey(name: categoryFieldId)
   String? get id => throw _privateConstructorUsedError;
+  @JsonKey(name: categoryFieldId)
   set id(String? value) => throw _privateConstructorUsedError;
+  @JsonKey(name: categoryFieldName)
   String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: categoryFieldName)
   set name(String value) => throw _privateConstructorUsedError;
+  @JsonKey(name: categoryFieldProductCount)
   int get productCount => throw _privateConstructorUsedError;
+  @JsonKey(name: categoryFieldProductCount)
   set productCount(int value) => throw _privateConstructorUsedError;
 
   /// Serializes this Category to a JSON map.
@@ -43,7 +49,11 @@ abstract class $CategoryCopyWith<$Res> {
   factory $CategoryCopyWith(Category value, $Res Function(Category) then) =
       _$CategoryCopyWithImpl<$Res, Category>;
   @useResult
-  $Res call({String? id, String name, int productCount});
+  $Res call({
+    @JsonKey(name: categoryFieldId) String? id,
+    @JsonKey(name: categoryFieldName) String name,
+    @JsonKey(name: categoryFieldProductCount) int productCount,
+  });
 }
 
 /// @nodoc
@@ -94,7 +104,11 @@ abstract class _$$CategoryImplCopyWith<$Res>
   ) = __$$CategoryImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? id, String name, int productCount});
+  $Res call({
+    @JsonKey(name: categoryFieldId) String? id,
+    @JsonKey(name: categoryFieldName) String name,
+    @JsonKey(name: categoryFieldProductCount) int productCount,
+  });
 }
 
 /// @nodoc
@@ -137,17 +151,23 @@ class __$$CategoryImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$CategoryImpl implements _Category {
-  _$CategoryImpl({this.id, required this.name, this.productCount = 0});
+  _$CategoryImpl({
+    @JsonKey(name: categoryFieldId) this.id,
+    @JsonKey(name: categoryFieldName) required this.name,
+    @JsonKey(name: categoryFieldProductCount) this.productCount = 0,
+  });
 
   factory _$CategoryImpl.fromJson(Map<String, dynamic> json) =>
       _$$CategoryImplFromJson(json);
 
   @override
+  @JsonKey(name: categoryFieldId)
   String? id;
   @override
+  @JsonKey(name: categoryFieldName)
   String name;
   @override
-  @JsonKey()
+  @JsonKey(name: categoryFieldProductCount)
   int productCount;
 
   @override
@@ -170,20 +190,29 @@ class _$CategoryImpl implements _Category {
 }
 
 abstract class _Category implements Category {
-  factory _Category({String? id, required String name, int productCount}) =
-      _$CategoryImpl;
+  factory _Category({
+    @JsonKey(name: categoryFieldId) String? id,
+    @JsonKey(name: categoryFieldName) required String name,
+    @JsonKey(name: categoryFieldProductCount) int productCount,
+  }) = _$CategoryImpl;
 
   factory _Category.fromJson(Map<String, dynamic> json) =
       _$CategoryImpl.fromJson;
 
   @override
+  @JsonKey(name: categoryFieldId)
   String? get id;
+  @JsonKey(name: categoryFieldId)
   set id(String? value);
   @override
+  @JsonKey(name: categoryFieldName)
   String get name;
+  @JsonKey(name: categoryFieldName)
   set name(String value);
   @override
+  @JsonKey(name: categoryFieldProductCount)
   int get productCount;
+  @JsonKey(name: categoryFieldProductCount)
   set productCount(int value);
 
   /// Create a copy of Category

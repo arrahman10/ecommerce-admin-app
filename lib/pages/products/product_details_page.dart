@@ -13,11 +13,18 @@ import 'package:ecommerce_admin_app/utils/constants.dart';
 import 'package:ecommerce_admin_app/utils/price_utils.dart';
 import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
+/// Page that shows full details for a single product.
+///
+/// Displays main and additional images, pricing & stock summary, description,
+/// availability flags, purchase-related actions (re-purchase, history)
+/// and delete product.
 class ProductDetailsPage extends StatefulWidget {
+  /// Route name used with [GoRouter] navigation.
   static const String routeName = 'product-details';
 
   const ProductDetailsPage({super.key, required this.product});
 
+  /// Product instance passed from the list or another page.
   final Product product;
 
   @override
@@ -25,15 +32,24 @@ class ProductDetailsPage extends StatefulWidget {
 }
 
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
-  // this is the local product instance shown in the UI
+  /// Local product instance used to render the UI.
+  ///
+  /// This is kept in state so that changes to pricing, stock, availability
+  /// or description can be reflected immediately without reloading the page.
   late Product _product;
+
+  /// Shared [ImagePicker] instance for capturing or selecting images.
   final ImagePicker _imagePicker = ImagePicker();
+
+  // ================== Lifecycle ==================
 
   @override
   void initState() {
     super.initState();
     _product = widget.product;
   }
+
+  // ================== UI build ==================
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +92,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // ---------- Header Image ----------
+  // ================== Main image ==================
 
+  /// Build the main product image header.
+  ///
+  /// Uses [Product.imageUrl] or falls back to [Product.thumbnailUrl].
+  /// If no image is available, shows a placeholder container.
   Widget _buildMainImage(BuildContext context, Product product) {
     final String? imageUrl = product.imageUrl?.isNotEmpty == true
         ? product.imageUrl
@@ -112,6 +132,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  /// Show a full-screen-style preview dialog for the main image.
   Future<void> _showMainImagePreviewDialog(
     BuildContext context,
     String imageUrl,
@@ -139,13 +160,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // ---------- Additional images: list + add/delete ----------
+  // ================== Additional images ==================
 
-  // Section for managing additional product images (add, list, delete)
+  /// Section for managing additional product images (add, list, delete).
   Widget _buildAdditionalImagesSection(BuildContext context, Product product) {
     final String? productId = product.id;
     if (productId == null || productId.isEmpty) {
-      // If there is no product id, skip additional images UI
+      // If there is no product id, skip additional images UI.
       return const SizedBox.shrink();
     }
 
@@ -248,6 +269,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  /// Show preview dialog for an additional image with delete option.
   Future<void> _showAdditionalImagePreviewDialog({
     required BuildContext context,
     required String imageDocId,
@@ -308,8 +330,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // ---------- Re-purchase / Purchase history buttons ----------
+  // ================== Primary actions (re-purchase / history) ==================
 
+  /// Build the row with "Re-purchase" and "Purchase history" actions.
   Widget _buildPrimaryActionsRow(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
@@ -350,7 +373,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // Dialog to handle re-purchase flow (quantity, price, note)
+  /// Dialog to handle re-purchase flow (quantity, price, optional note).
   Future<void> _showRepurchaseDialog(BuildContext context) async {
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -454,7 +477,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
       if (!mounted) return;
 
-      // Update local product state so the UI reflects new stock & price
+      // Update local product state so the UI reflects new stock & price.
       setState(() {
         _product = _product.copyWith(
           stock: _product.stock + quantity,
@@ -469,7 +492,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // Bottom sheet to show purchase history for this product
+  /// Bottom sheet to show purchase history for this product.
   Future<void> _showPurchaseHistoryBottomSheet(BuildContext context) async {
     final String? productId = _product.id;
     if (productId == null || productId.isEmpty) {
@@ -591,8 +614,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // ---------- Basic info (name, category, brand) ----------
+  // ================== Basic info ==================
 
+  /// Build header section with name, category/brand and price summary.
   Widget _buildBasicInfoSection(BuildContext context, Product product) {
     final ThemeData theme = Theme.of(context);
     final double finalPrice = calculateFinalPrice(product);
@@ -657,6 +681,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  /// Short description preview under the header.
   Widget _buildShortDescriptionPreview(BuildContext context, Product product) {
     final ThemeData theme = Theme.of(context);
     final String? short = product.shortDescription?.trim();
@@ -670,9 +695,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // ---------- Price & stock summary ----------
+  // ================== Price & stock summary ==================
 
-  // Show price & stock summary card and open edit dialog from here
+  /// Show price & stock summary card and open edit dialog from here.
   Widget _buildPriceAndStockSection(BuildContext context, Product product) {
     return Card(
       elevation: 0,
@@ -731,14 +756,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  /// Dialog to edit pricing and stock values.
   Future<void> _showEditPriceStockDialog(
     BuildContext context,
     Product product,
   ) async {
-    // Separate form key for validation
+    // Separate form key for validation.
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-    // Prefill current values into the text fields
+    // Prefill current values into the text fields.
     final TextEditingController purchasePriceController = TextEditingController(
       text: _product.purchasePrice.toStringAsFixed(0),
     );
@@ -839,7 +865,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       return;
     }
 
-    // Parse new values
+    // Parse new values.
     final double newPurchasePrice = double.parse(
       purchasePriceController.text.trim(),
     );
@@ -849,7 +875,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         : double.parse(discountController.text.trim());
     final int newStock = int.parse(stockController.text.trim());
 
-    // If nothing changed, do not hit Firestore
+    // If nothing changed, do not hit Firestore.
     if (newPurchasePrice == _product.purchasePrice &&
         newSalePrice == _product.salePrice &&
         newDiscount == _product.discount &&
@@ -872,7 +898,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         return;
       }
 
-      // Update local state so UI reflects immediately
+      // Update local state so UI reflects immediately.
       setState(() {
         _product = _product.copyWith(
           purchasePrice: newPurchasePrice,
@@ -891,9 +917,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // ---------- Description (read-only for now) ----------
+  // ================== Description ==================
 
-  // this section shows description preview and triggers the full view/edit dialog
+  /// Description section that shows a preview and opens the full editor.
   Widget _buildDescriptionSection(BuildContext context, Product product) {
     final ThemeData theme = Theme.of(context);
     final String longText = product.longDescription?.trim() ?? '';
@@ -939,6 +965,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  /// Dialog to view and edit the full long description.
   Future<void> _showDescriptionDialog(
     BuildContext context,
     Product product,
@@ -949,7 +976,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       text: product.longDescription ?? '',
     );
 
-    // build a dialog to view and edit the full description
     final String? updatedText = await showDialog<String>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -985,18 +1011,19 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       },
     );
 
-    // if user cancels or keeps text unchanged, do nothing
+    // If user cancels or keeps text unchanged, do nothing.
     if (updatedText == null || updatedText == product.longDescription?.trim()) {
       return;
     }
 
-    // update new description in Firestore and in the local product list
+    // Update new description in Firestore and in the local product list.
     await provider.updateProductDescription(
       product: product,
       longDescription: updatedText.isEmpty ? null : updatedText,
     );
 
-    // also update the local product state so the updated description appears immediately in the UI
+    // Also update the local product state so the updated description
+    // appears immediately in the UI.
     if (mounted) {
       setState(() {
         _product = _product.copyWith(
@@ -1006,9 +1033,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // ---------- Available / Featured switches (UI only) ----------
+  // ================== Availability (Available / Featured) ==================
 
-  // Product availability (Available / Featured) section
+  /// Product availability (Available / Featured) section with switches.
   Widget _buildAvailabilitySection(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
@@ -1076,7 +1103,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // Helper to update Available and Featured flags in Firestore and local state
+  /// Helper to update Available and Featured flags in Firestore and local state.
   Future<void> _updateAvailabilityAndFeatured({
     required BuildContext context,
     required bool available,
@@ -1101,15 +1128,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          // For debugging you can use debugPrint(e.toString()) instead of UI text
+          // For debugging you can use debugPrint(e.toString()) instead of UI text.
           content: Text('Failed to update availability'),
         ),
       );
     }
   }
 
-  // ---------- Notify users button (placeholder) ----------
+  // ================== Notify users (placeholder) ==================
 
+  /// Placeholder action to notify users about this product.
   Widget _buildNotifyUsersButton(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
@@ -1142,6 +1170,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  // ================== Validation helpers ==================
+
   String? _validateRequiredPositiveDouble(String? value, String fieldLabel) {
     final String trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
@@ -1157,7 +1187,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   String? _validateRequiredNonNegativeDouble(String? value, String fieldLabel) {
     final String trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
-      // You can return null here if you want empty discount to be allowed
+      // You can return null here if you want empty discount to be allowed.
       return null;
     }
     final double? parsed = double.tryParse(trimmed);
@@ -1191,7 +1221,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     return null;
   }
 
-  // Bottom sheet to choose camera or gallery for additional image
+  // ================== Additional image picking ==================
+
+  /// Bottom sheet to choose camera or gallery for additional image.
   Future<void> _showAdditionalImageSourceSheet(
     BuildContext parentContext,
   ) async {
@@ -1224,7 +1256,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // Pick an additional image and upload/save it for the product
+  /// Pick an additional image and upload/save it for the product.
   Future<void> _pickAdditionalImage(
     BuildContext context,
     ImageSource source,
@@ -1258,7 +1290,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // Show confirm dialog before deleting an additional image
+  /// Show confirm dialog before deleting an additional image.
   Future<void> _confirmDeleteAdditionalImage({
     required BuildContext context,
     required String imageDocId,
@@ -1266,17 +1298,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Delete image'),
           content: const Text('Are you sure you want to delete this image?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.pop<bool>(context, false),
+              onPressed: () => Navigator.pop<bool>(dialogContext, false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop<bool>(context, true),
+              onPressed: () => Navigator.pop<bool>(dialogContext, true),
               child: const Text('Delete'),
             ),
           ],
@@ -1302,7 +1334,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // Show confirmation dialog before deleting the product
+  // ================== Product delete ==================
+
+  /// Show confirmation dialog before deleting the product.
   Future<void> _confirmDeleteProduct(BuildContext context) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
@@ -1337,7 +1371,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         return;
       }
 
-      // Show success message first, then go back to the list
+      // Show success message first, then go back to the list.
       showMsg(context, 'Product deleted successfully');
       Navigator.of(context).pop();
     } catch (e) {

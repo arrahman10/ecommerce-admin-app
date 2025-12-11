@@ -5,6 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
 import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
+/// Page that shows all categories and lets the admin add new ones.
+///
+/// Displays a list of categories with product counts.
+/// Uses [CategoryProvider] for data and a dialog to create a new category.
 class CategoryPage extends StatelessWidget {
   static const String routeName = 'categories';
 
@@ -90,6 +94,9 @@ class CategoryPage extends StatelessWidget {
     );
   }
 
+  /// Show a dialog to create a new category.
+  ///
+  /// Validates non-empty name and then calls [CategoryProvider.addCategory].
   Future<void> _showAddCategoryDialog(BuildContext context) async {
     final ThemeData theme = Theme.of(context);
     final TextEditingController controller = TextEditingController();
@@ -157,15 +164,12 @@ class CategoryPage extends StatelessWidget {
     );
 
     if (shouldSave == true) {
-      final String value = controller.text.trim();
-      if (value.isEmpty) return;
+      final String categoryName = controller.text.trim();
+      if (categoryName.isEmpty) return;
 
       EasyLoading.show(status: 'Please wait');
       try {
-        await Provider.of<CategoryProvider>(
-          context,
-          listen: false,
-        ).addCategory(value);
+        await context.read<CategoryProvider>().addCategory(categoryName);
         EasyLoading.dismiss();
         showMsg(context, 'Category added');
       } catch (_) {

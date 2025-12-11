@@ -9,8 +9,12 @@ import 'package:ecommerce_admin_app/models/image_model.dart';
 import 'package:ecommerce_admin_app/models/product.dart';
 import 'package:ecommerce_admin_app/utils/constants.dart';
 
+/// Helper class for all Firestore and Firebase Storage operations used by
+/// the ecommerce admin app.
 class DbHelper {
   DbHelper._();
+
+  // ================== Core configuration & collection names ==================
 
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -20,6 +24,8 @@ class DbHelper {
   static const String subCollectionAdditionalImages = 'AdditionalImages';
   static const String subCollectionPurchases = 'Purchases';
 
+  // ================== Admin helpers ==================
+
   /// Check if the given user id exists in the Admins collection.
   static Future<bool> isAdmin(String uid) async {
     final DocumentSnapshot<Map<String, dynamic>> snapshot = await _db
@@ -28,6 +34,8 @@ class DbHelper {
         .get();
     return snapshot.exists;
   }
+
+  // ================== Brand helpers ==================
 
   /// Add a new brand document to the Brands collection.
   static Future<void> addBrand(Brand brand) async {
@@ -44,11 +52,16 @@ class DbHelper {
   }
 
   /// Increment total product quantity for a given brand document.
+  ///
+  /// If the provided quantity is zero, the method returns early without
+  /// performing any update.
   static Future<void> incrementBrandProductCount({
     required String brandId,
     required int quantity,
   }) async {
-    if (quantity == 0) return;
+    if (quantity == 0) {
+      return;
+    }
 
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionBrand)
@@ -58,6 +71,8 @@ class DbHelper {
       brandFieldProductCount: FieldValue.increment(quantity),
     });
   }
+
+  // ================== Category helpers ==================
 
   /// Add a new category document to the Categories collection.
   static Future<void> addCategory(Category category) async {
@@ -74,11 +89,16 @@ class DbHelper {
   }
 
   /// Increment total product quantity for a given category document.
+  ///
+  /// If the provided quantity is zero, the method returns early without
+  /// performing any update.
   static Future<void> incrementCategoryProductCount({
     required String categoryId,
     required int quantity,
   }) async {
-    if (quantity == 0) return;
+    if (quantity == 0) {
+      return;
+    }
 
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionCategory)
@@ -89,8 +109,10 @@ class DbHelper {
     });
   }
 
-  /// Upload a single product image file to Firebase Storage
-  /// and return an ImageModel with download URL + storage path.
+  // ================== Product images (upload & cleanup) ==================
+
+  /// Upload a single product image file to Firebase Storage and return an
+  /// [ImageModel] with download URL and storage path.
   static Future<ImageModel> uploadProductImage(File file) async {
     final String originalFileName = file.uri.pathSegments.isNotEmpty
         ? file.uri.pathSegments.last
@@ -116,7 +138,32 @@ class DbHelper {
     );
   }
 
+  /// Delete the main product image file from Firebase Storage if a URL is set.
+  ///
+  /// The method prefers [Product.imageUrl] and falls back to
+  /// [Product.thumbnailUrl] when needed. Any storage errors are swallowed.
+  static Future<void> deleteMainProductImageForProduct(Product product) async {
+    final String? url = product.imageUrl?.isNotEmpty == true
+        ? product.imageUrl
+        : product.thumbnailUrl;
+
+    if (url == null || url.isEmpty) {
+      return;
+    }
+
+    try {
+      final Reference ref = FirebaseStorage.instance.refFromURL(url);
+      await ref.delete();
+    } catch (_) {
+      // Swallow errors to avoid breaking product deletion flows.
+    }
+  }
+
+  // ================== Product CRUD & queries ==================
+
   /// Add a new product document to the Products collection.
+  ///
+  /// If [product.createdAt] is null, the current timestamp is used.
   static Future<void> addProduct(Product product) async {
     final DocumentReference<Map<String, dynamic>> doc = _db
         .collection(collectionProduct)
@@ -130,7 +177,7 @@ class DbHelper {
     await doc.set(updatedProduct.toJson());
   }
 
-  /// Helper to update product purchase price, sale price, discount and stock
+  /// Update product purchase price, sale price, discount and stock.
   static Future<void> updateProductPricingAndStock({
     required String productId,
     required double purchasePrice,
@@ -149,7 +196,7 @@ class DbHelper {
         });
   }
 
-  /// Helper to update product availability and featured flags
+  /// Update product availability and featured flags.
   static Future<void> updateProductAvailabilityAndFeatured({
     required String productId,
     required bool available,
@@ -171,17 +218,25 @@ class DbHelper {
         .snapshots();
   }
 
+  /// Update only the longDescription field for a given product document.
   static Future<void> updateProductDescription(
     String productId,
     String? longDescription,
   ) async {
-    // update only the longDescription field for a given product document
     await _db.collection(collectionProduct).doc(productId).update(
       <String, dynamic>{productFieldLongDescription: longDescription},
     );
   }
 
-  // Add an additional image for a product under its sub-collection
+  /// Delete a single product document from the Products collection.
+  static Future<void> deleteProductDocument(String productId) {
+    return _db.collection(collectionProduct).doc(productId).delete();
+  }
+
+  // ================== Additional images for products ==================
+
+  /// Add an additional image for a product under its AdditionalImages
+  /// sub-collection.
   static Future<void> addAdditionalProductImage({
     required String productId,
     required ImageModel image,
@@ -194,7 +249,8 @@ class DbHelper {
         .set(image.toJson());
   }
 
-  // Get a stream of all additional images for a product
+  /// Get a stream of all additional images for a product, ordered by upload
+  /// time in descending order.
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAdditionalProductImages(
     String productId,
   ) {
@@ -206,17 +262,17 @@ class DbHelper {
         .snapshots();
   }
 
-  // Delete an additional image from both Storage and Firestore
+  /// Delete an additional image from both Firebase Storage and Firestore.
   static Future<void> deleteAdditionalProductImage({
     required String productId,
     required String imageDocId,
     required String storagePath,
   }) async {
-    // Storage file delete
+    // Delete the storage file.
     final Reference ref = FirebaseStorage.instance.ref().child(storagePath);
     await ref.delete();
 
-    // Firestore doc delete
+    // Delete the Firestore document.
     await _db
         .collection(collectionProduct)
         .doc(productId)
@@ -225,44 +281,7 @@ class DbHelper {
         .delete();
   }
 
-  // Add a new purchase entry under a product's Purchases sub-collection
-  static Future<void> addPurchase({
-    required String productId,
-    required int quantity,
-    required double purchasePrice,
-    String? note,
-  }) async {
-    await _db
-        .collection(collectionProduct)
-        .doc(productId)
-        .collection(subCollectionPurchases)
-        .add(<String, dynamic>{
-          purchaseFieldQuantity: quantity,
-          purchaseFieldPurchasePrice: purchasePrice,
-          purchaseFieldPurchaseDate: DateTime.now(),
-          if (note != null && note.trim().isNotEmpty)
-            purchaseFieldNote: note.trim(),
-        });
-  }
-
-  // Get a stream of all purchase history entries for a product
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getPurchases(
-    String productId,
-  ) {
-    return _db
-        .collection(collectionProduct)
-        .doc(productId)
-        .collection(subCollectionPurchases)
-        .orderBy(purchaseFieldPurchaseDate, descending: true)
-        .snapshots();
-  }
-
-  // Delete a single product document from the Products collection
-  static Future<void> deleteProductDocument(String productId) {
-    return _db.collection(collectionProduct).doc(productId).delete();
-  }
-
-  // Delete all additional images (Storage + Firestore docs) for a product
+  /// Delete all additional images (Storage + Firestore docs) for a product.
   static Future<void> deleteAllAdditionalProductImagesForProduct(
     String productId,
   ) async {
@@ -283,23 +302,45 @@ class DbHelper {
     }
   }
 
-  // Helper to delete the main product image file from Firebase Storage
-  static Future<void> deleteMainProductImageForProduct(Product product) async {
-    final String? url = product.imageUrl?.isNotEmpty == true
-        ? product.imageUrl
-        : product.thumbnailUrl;
+  // ================== Purchase history for products ==================
 
-    if (url == null || url.isEmpty) {
-      return;
-    }
-
-    try {
-      final Reference ref = FirebaseStorage.instance.refFromURL(url);
-      await ref.delete();
-    } catch (_) {}
+  /// Add a new purchase entry under a product's Purchases sub-collection.
+  ///
+  /// The current timestamp is used as the purchase date. The note field is
+  /// only written when a non-empty value is provided.
+  static Future<void> addPurchase({
+    required String productId,
+    required int quantity,
+    required double purchasePrice,
+    String? note,
+  }) async {
+    await _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionPurchases)
+        .add(<String, dynamic>{
+          purchaseFieldQuantity: quantity,
+          purchaseFieldPurchasePrice: purchasePrice,
+          purchaseFieldPurchaseDate: DateTime.now(),
+          if (note != null && note.trim().isNotEmpty)
+            purchaseFieldNote: note.trim(),
+        });
   }
 
-  // Delete all purchase history entries for a product
+  /// Get a stream of all purchase history entries for a product ordered by
+  /// purchase date in descending order.
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getPurchases(
+    String productId,
+  ) {
+    return _db
+        .collection(collectionProduct)
+        .doc(productId)
+        .collection(subCollectionPurchases)
+        .orderBy(purchaseFieldPurchaseDate, descending: true)
+        .snapshots();
+  }
+
+  /// Delete all purchase history entries for a product.
   static Future<void> deleteAllPurchasesForProduct(String productId) async {
     final QuerySnapshot<Map<String, dynamic>> snapshot = await _db
         .collection(collectionProduct)

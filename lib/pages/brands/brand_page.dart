@@ -5,6 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/utils/widget_functions.dart';
 
+/// Page that shows all brands and allows the admin to add new brands.
+///
+/// Displays a list of brands with total product counts and uses
+/// [BrandProvider] as the data source.
 class BrandPage extends StatelessWidget {
   static const String routeName = 'brands';
 
@@ -32,6 +36,10 @@ class BrandPage extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (BuildContext context, int index) {
               final brand = provider.brandList[index];
+              final int productCount = brand.productCount;
+              final String subtitleText = productCount > 0
+                  ? 'Total products: $productCount'
+                  : 'No products yet';
 
               return Card(
                 elevation: 0,
@@ -61,7 +69,7 @@ class BrandPage extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    'Total products: ${brand.productCount}',
+                    subtitleText,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
                     ),
@@ -75,6 +83,9 @@ class BrandPage extends StatelessWidget {
     );
   }
 
+  /// Show a dialog to create a new brand.
+  ///
+  /// Validates the brand name and then calls [BrandProvider.addBrand].
   Future<void> _showAddBrandDialog(BuildContext context) async {
     final ThemeData theme = Theme.of(context);
     final TextEditingController controller = TextEditingController();
@@ -142,15 +153,12 @@ class BrandPage extends StatelessWidget {
     );
 
     if (shouldSave == true) {
-      final String value = controller.text.trim();
-      if (value.isEmpty) return;
+      final String brandName = controller.text.trim();
+      if (brandName.isEmpty) return;
 
       EasyLoading.show(status: 'Please wait');
       try {
-        await Provider.of<BrandProvider>(
-          context,
-          listen: false,
-        ).addBrand(value);
+        await context.read<BrandProvider>().addBrand(brandName);
         EasyLoading.dismiss();
         showMsg(context, 'Brand added');
       } catch (_) {

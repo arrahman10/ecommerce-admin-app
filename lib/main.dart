@@ -18,6 +18,9 @@ import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
 
+// ================== Application entry point ==================
+
+/// Entry point of the ecommerce admin application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -25,7 +28,7 @@ Future<void> main() async {
 
   runApp(
     MultiProvider(
-      providers: [
+      providers: <ChangeNotifierProvider<dynamic>>[
         ChangeNotifierProvider<CategoryProvider>(
           create: (BuildContext context) => CategoryProvider(),
         ),
@@ -41,6 +44,9 @@ Future<void> main() async {
   );
 }
 
+// ================== Root widget ==================
+
+/// Root widget that configures the app theme and routing.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -49,6 +55,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Ecommerce Admin App',
       debugShowCheckedModeBanner: false,
+      // Wrap the app with EasyLoading to show global loading overlays.
       builder: EasyLoading.init(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
@@ -59,23 +66,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// ================== Router configuration ==================
+
+/// Global router configuration for the admin panel.
 final GoRouter _router = GoRouter(
+  // Start from the dashboard; redirect logic below will enforce auth.
   initialLocation: DashboardPage.routeName,
   redirect: (BuildContext context, GoRouterState state) {
+    // Determine the current authentication state.
     final bool isLoggedIn = AuthService.currentUser != null;
     final bool isLoggingIn = state.matchedLocation == LoginPage.routeName;
 
+    // If the user is not logged in, force navigation to the login page.
     if (!isLoggedIn && !isLoggingIn) {
       return LoginPage.routeName;
     }
 
+    // If the user is already logged in, skip the login page.
     if (isLoggedIn && isLoggingIn) {
       return DashboardPage.routeName;
     }
 
+    // Otherwise, do not redirect.
     return null;
   },
   routes: <RouteBase>[
+    // Protected dashboard route with nested feature routes.
     GoRoute(
       name: DashboardPage.routeName,
       path: DashboardPage.routeName,
@@ -116,6 +132,7 @@ final GoRouter _router = GoRouter(
         ),
       ],
     ),
+    // Public login route used by the auth redirect.
     GoRoute(
       name: LoginPage.routeName,
       path: LoginPage.routeName,

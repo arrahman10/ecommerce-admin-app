@@ -9,7 +9,12 @@ import 'package:ecommerce_admin_app/pages/login_page.dart';
 import 'package:ecommerce_admin_app/providers/brand_provider.dart';
 import 'package:ecommerce_admin_app/providers/category_provider.dart';
 
+/// Main admin dashboard page.
+///
+/// Shows a grid of high-level actions (categories, brands, products, etc.)
+/// and ensures that initial brand/category data is loaded via providers.
 class DashboardPage extends StatefulWidget {
+  /// Route name used with [GoRouter] navigation.
   static const String routeName = '/';
 
   const DashboardPage({super.key});
@@ -19,6 +24,12 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  // ================== Lifecycle ==================
+
+  /// Load initial data (brands and categories) when dependencies change.
+  ///
+  /// This ensures that providers have their data ready when the dashboard
+  /// grid and its child pages are used.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -26,8 +37,12 @@ class _DashboardPageState extends State<DashboardPage> {
     Provider.of<CategoryProvider>(context, listen: false).getAllCategories();
   }
 
+  // ================== UI build ==================
+
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -35,7 +50,9 @@ class _DashboardPageState extends State<DashboardPage> {
           IconButton(
             onPressed: () async {
               await AuthService.logout();
-              if (!mounted) return;
+              if (!mounted) {
+                return;
+              }
               context.goNamed(LoginPage.routeName);
             },
             icon: const Icon(Icons.logout),
@@ -44,7 +61,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       body: Container(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
         child: GridView.builder(
           padding: const EdgeInsets.fromLTRB(5, 5, 5, 5),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

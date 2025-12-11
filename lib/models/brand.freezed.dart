@@ -21,11 +21,17 @@ Brand _$BrandFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Brand {
+  @JsonKey(name: brandFieldId)
   String? get id => throw _privateConstructorUsedError;
+  @JsonKey(name: brandFieldId)
   set id(String? value) => throw _privateConstructorUsedError;
+  @JsonKey(name: brandFieldName)
   String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: brandFieldName)
   set name(String value) => throw _privateConstructorUsedError;
+  @JsonKey(name: brandFieldProductCount)
   int get productCount => throw _privateConstructorUsedError;
+  @JsonKey(name: brandFieldProductCount)
   set productCount(int value) => throw _privateConstructorUsedError;
 
   /// Serializes this Brand to a JSON map.
@@ -42,7 +48,11 @@ abstract class $BrandCopyWith<$Res> {
   factory $BrandCopyWith(Brand value, $Res Function(Brand) then) =
       _$BrandCopyWithImpl<$Res, Brand>;
   @useResult
-  $Res call({String? id, String name, int productCount});
+  $Res call({
+    @JsonKey(name: brandFieldId) String? id,
+    @JsonKey(name: brandFieldName) String name,
+    @JsonKey(name: brandFieldProductCount) int productCount,
+  });
 }
 
 /// @nodoc
@@ -92,7 +102,11 @@ abstract class _$$BrandImplCopyWith<$Res> implements $BrandCopyWith<$Res> {
   ) = __$$BrandImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? id, String name, int productCount});
+  $Res call({
+    @JsonKey(name: brandFieldId) String? id,
+    @JsonKey(name: brandFieldName) String name,
+    @JsonKey(name: brandFieldProductCount) int productCount,
+  });
 }
 
 /// @nodoc
@@ -135,17 +149,23 @@ class __$$BrandImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$BrandImpl implements _Brand {
-  _$BrandImpl({this.id, required this.name, this.productCount = 0});
+  _$BrandImpl({
+    @JsonKey(name: brandFieldId) this.id,
+    @JsonKey(name: brandFieldName) required this.name,
+    @JsonKey(name: brandFieldProductCount) this.productCount = 0,
+  });
 
   factory _$BrandImpl.fromJson(Map<String, dynamic> json) =>
       _$$BrandImplFromJson(json);
 
   @override
+  @JsonKey(name: brandFieldId)
   String? id;
   @override
+  @JsonKey(name: brandFieldName)
   String name;
   @override
-  @JsonKey()
+  @JsonKey(name: brandFieldProductCount)
   int productCount;
 
   @override
@@ -168,19 +188,28 @@ class _$BrandImpl implements _Brand {
 }
 
 abstract class _Brand implements Brand {
-  factory _Brand({String? id, required String name, int productCount}) =
-      _$BrandImpl;
+  factory _Brand({
+    @JsonKey(name: brandFieldId) String? id,
+    @JsonKey(name: brandFieldName) required String name,
+    @JsonKey(name: brandFieldProductCount) int productCount,
+  }) = _$BrandImpl;
 
   factory _Brand.fromJson(Map<String, dynamic> json) = _$BrandImpl.fromJson;
 
   @override
+  @JsonKey(name: brandFieldId)
   String? get id;
+  @JsonKey(name: brandFieldId)
   set id(String? value);
   @override
+  @JsonKey(name: brandFieldName)
   String get name;
+  @JsonKey(name: brandFieldName)
   set name(String value);
   @override
+  @JsonKey(name: brandFieldProductCount)
   int get productCount;
+  @JsonKey(name: brandFieldProductCount)
   set productCount(int value);
 
   /// Create a copy of Brand

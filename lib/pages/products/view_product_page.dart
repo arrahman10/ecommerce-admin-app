@@ -7,7 +7,12 @@ import 'package:ecommerce_admin_app/pages/products/product_details_page.dart';
 import 'package:ecommerce_admin_app/providers/product_provider.dart';
 import 'package:ecommerce_admin_app/utils/price_utils.dart';
 
+/// Page that lists all products for the admin.
+///
+/// Uses [ProductProvider] to listen to products and shows them in a
+/// scrollable list. Tapping an item navigates to [ProductDetailsPage].
 class ViewProductPage extends StatefulWidget {
+  /// Route name used with [GoRouter] navigation.
   static const String routeName = 'view-products';
 
   const ViewProductPage({super.key});
@@ -17,6 +22,12 @@ class ViewProductPage extends StatefulWidget {
 }
 
 class _ViewProductPageState extends State<ViewProductPage> {
+  // ================== Lifecycle ==================
+
+  /// Load products after the first frame is built.
+  ///
+  /// This ensures that the [BuildContext] is fully available when
+  /// accessing [ProductProvider].
   @override
   void initState() {
     super.initState();
@@ -24,6 +35,8 @@ class _ViewProductPageState extends State<ViewProductPage> {
       context.read<ProductProvider>().getAllProducts();
     });
   }
+
+  // ================== UI build ==================
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +138,12 @@ class _ViewProductPageState extends State<ViewProductPage> {
     );
   }
 
+  // ================== Helpers ==================
+
+  /// Build a thumbnail image for the given [product].
+  ///
+  /// If [Product.thumbnailUrl] is empty or null, a placeholder
+  /// with an image icon is shown instead.
   Widget _buildThumbnail(BuildContext context, Product product) {
     final ThemeData theme = Theme.of(context);
 

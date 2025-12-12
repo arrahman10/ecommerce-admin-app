@@ -786,6 +786,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     final ProductProvider provider = context.read<ProductProvider>();
 
+    EasyLoading.show(status: 'Saving purchase...');
     try {
       await provider.addPurchaseAndIncreaseStock(
         product: _product,
@@ -794,7 +795,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         note: note,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
 
       // Update local product state so the UI reflects new stock & price.
       setState(() {
@@ -804,10 +808,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         );
       });
 
-      showMsg(context, 'Purchase saved and stock updated');
+      EasyLoading.dismiss();
+      EasyLoading.showSuccess('Purchase saved and stock updated');
     } catch (e) {
-      if (!mounted) return;
-      showMsg(context, 'Failed to complete re-purchase: $e');
+      EasyLoading.dismiss();
+      if (mounted) {
+        EasyLoading.showError('Failed to complete re-purchase');
+      }
     }
   }
 
@@ -1309,6 +1316,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     final ProductProvider provider = context.read<ProductProvider>();
 
+    EasyLoading.show(status: 'Saving pricing & stock...');
     try {
       await provider.updateProductPricingAndStock(
         product: _product,
@@ -1319,6 +1327,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       );
 
       if (!mounted) {
+        EasyLoading.dismiss();
         return;
       }
 
@@ -1332,12 +1341,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         );
       });
 
-      showMsg(context, 'Product pricing and stock updated');
+      EasyLoading.dismiss();
+      EasyLoading.showSuccess('Product pricing and stock updated');
     } catch (e) {
-      if (!mounted) {
-        return;
+      EasyLoading.dismiss();
+      if (mounted) {
+        EasyLoading.showError('Failed to update product');
       }
-      showMsg(context, 'Failed to update product: $e');
     }
   }
 
@@ -1570,6 +1580,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }) async {
     final ProductProvider provider = context.read<ProductProvider>();
 
+    EasyLoading.show(status: 'Updating availability...');
     try {
       await provider.updateProductAvailabilityAndFeatured(
         product: _product,
@@ -1577,20 +1588,22 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         featured: featured,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
 
       setState(() {
         _product = _product.copyWith(available: available, featured: featured);
       });
-    } catch (e) {
-      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          // For debugging you can use debugPrint(e.toString()) instead of UI text.
-          content: Text('Failed to update availability'),
-        ),
-      );
+      EasyLoading.dismiss();
+      EasyLoading.showSuccess('Availability updated');
+    } catch (e) {
+      EasyLoading.dismiss();
+      if (mounted) {
+        EasyLoading.showError('Failed to update availability');
+      }
     }
   }
 
@@ -1604,12 +1617,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Notify users feature will be implemented later.'),
-            ),
+          EasyLoading.showInfo(
+            'Notify users feature will be implemented later.',
           );
         },
+
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
@@ -1732,25 +1744,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
 
     if (_product.id == null || _product.id!.isEmpty) {
-      showMsg(context, 'Cannot add image: product id is missing');
+      EasyLoading.showError('Cannot add image: product id is missing');
       return;
     }
 
+    EasyLoading.show(status: 'Uploading image...');
     try {
-      EasyLoading.show(status: 'Uploading image...');
-
       await context.read<ProductProvider>().addAdditionalProductImage(
         product: _product,
         imageFile: File(picked.path),
       );
-
-      if (!mounted) return;
-      showMsg(context, 'Additional image added');
-    } catch (e) {
-      if (!mounted) return;
-      showMsg(context, 'Failed to add additional image: $e');
-    } finally {
       EasyLoading.dismiss();
+      EasyLoading.showSuccess('Additional image added');
+    } catch (e) {
+      EasyLoading.dismiss();
+      EasyLoading.showError('Failed to add additional image');
     }
   }
 
@@ -1786,20 +1794,18 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     if (!mounted) return;
 
+    EasyLoading.show(status: 'Deleting image...');
     try {
-      EasyLoading.show(status: 'Deleting image...');
-
       await context.read<ProductProvider>().deleteAdditionalProductImage(
         product: _product,
         imageDocId: imageDocId,
         image: image,
       );
-
-      showMsg(context, 'Additional image deleted');
-    } catch (e) {
-      showMsg(context, 'Failed to delete additional image: $e');
-    } finally {
       EasyLoading.dismiss();
+      EasyLoading.showSuccess('Additional image deleted');
+    } catch (e) {
+      EasyLoading.dismiss();
+      EasyLoading.showError('Failed to delete additional image');
     }
   }
 
@@ -1833,21 +1839,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     final ProductProvider provider = context.read<ProductProvider>();
 
+    EasyLoading.show(status: 'Deleting product...');
     try {
       await provider.deleteProduct(product: _product);
 
       if (!mounted) {
+        EasyLoading.dismiss();
         return;
       }
 
-      // Show success message first, then go back to the list.
-      showMsg(context, 'Product deleted successfully');
+      EasyLoading.dismiss();
+      EasyLoading.showSuccess('Product deleted successfully');
       Navigator.of(context).pop();
     } catch (e) {
-      if (!mounted) {
-        return;
+      EasyLoading.dismiss();
+      if (mounted) {
+        EasyLoading.showError('Failed to delete product');
       }
-      showMsg(context, 'Failed to delete product: $e');
     }
   }
 }

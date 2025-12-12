@@ -1083,55 +1083,149 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   /// Show price & stock summary card and open edit dialog from here.
   Widget _buildPriceAndStockSection(BuildContext context, Product product) {
+    final ThemeData theme = Theme.of(context);
+    final double finalPrice = calculateFinalPrice(product);
+
+    Widget metricTile(String label, String value) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.textTheme.bodySmall?.color?.withOpacity(0.75),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.18)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  'Price & stock',
-                  style: Theme.of(context).textTheme.titleMedium,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Icon(
+                            Icons.price_change_outlined,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Price & stock',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Current selling price',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.textTheme.bodySmall?.color?.withOpacity(
+                            0.75,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    if (product.discount > 0)
+                      Text(
+                        '৳${product.salePrice.toStringAsFixed(0)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    if (product.discount > 0) const SizedBox(height: 2),
+                    Text(
+                      '৳${finalPrice.toStringAsFixed(0)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 4),
                 IconButton(
-                  icon: const Icon(Icons.edit),
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(Icons.edit_outlined),
                   tooltip: 'Edit pricing and stock',
                   onPressed: () => _showEditPriceStockDialog(context, product),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Sale price: ৳${product.salePrice.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Purchase price: ৳${product.purchasePrice.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: theme.dividerColor.withOpacity(0.25)),
+            const SizedBox(height: 12),
             Row(
               children: <Widget>[
-                Text(
-                  product.discount > 0
-                      ? 'Discount: ${product.discount.toStringAsFixed(1)}%'
-                      : 'No discount applied',
-                  style: Theme.of(context).textTheme.bodySmall,
+                Expanded(
+                  child: metricTile(
+                    'Purchase price',
+                    '৳${product.purchasePrice.toStringAsFixed(2)}',
+                  ),
                 ),
-                const Spacer(),
-                Text(
-                  'Stock: ${product.stock}',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: metricTile(
+                    'Sale price',
+                    '৳${product.salePrice.toStringAsFixed(2)}',
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: metricTile(
+                    'Discount',
+                    product.discount > 0
+                        ? '${product.discount.toStringAsFixed(1)}%'
+                        : 'No discount',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: metricTile('Stock', product.stock.toString())),
               ],
             ),
           ],
